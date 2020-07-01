@@ -1,11 +1,11 @@
-import * as React from 'react';
-import * as Constants from '~/common/constants';
-import * as SVG from '~/components/system/svg';
-import * as Strings from '~/common/strings';
+import * as React from "react";
+import * as Constants from "~/common/constants";
+import * as SVG from "~/components/system/svg";
+import * as Strings from "~/common/strings";
 
-import { css } from '@emotion/react';
+import { css } from "@emotion/react";
 
-import { DescriptionGroup } from '~/components/system/components/fragments/DescriptionGroup';
+import { DescriptionGroup } from "~/components/system/components/fragments/DescriptionGroup";
 
 const INPUT_STYLES = `
   -webkit-appearance: none;
@@ -33,12 +33,14 @@ const STYLES_INPUT_CONTAINER = css`
 const STYLES_INPUT = css`
   ${INPUT_STYLES}
   padding: 0 24px 0 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 0 0 1px ${Constants.system.darkGray};
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 1px ${Constants.system.darkGray};
 
   :focus {
     outline: 0;
     border: 0;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07), inset 0 0 0 2px ${Constants.system.brand};
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07),
+      inset 0 0 0 2px ${Constants.system.brand};
   }
 
   ::placeholder {
@@ -82,7 +84,7 @@ export class Input extends React.Component {
 
   _handleCopy = (e) => {
     this._input.select();
-    document.execCommand('copy');
+    document.execCommand("copy");
   };
 
   _handleKeyUp = (e) => {
@@ -95,7 +97,10 @@ export class Input extends React.Component {
   };
 
   _handleChange = (e) => {
-    if (!Strings.isEmpty(this.props.pattern) && !Strings.isEmpty(e.target.value)) {
+    if (
+      !Strings.isEmpty(this.props.pattern) &&
+      !Strings.isEmpty(e.target.value)
+    ) {
       const TestRegex = new RegExp(this.props.pattern);
       if (!TestRegex.test(e.target.value)) {
         e.preventDefault();
@@ -116,7 +121,11 @@ export class Input extends React.Component {
   render() {
     return (
       <div css={STYLES_INPUT_CONTAINER} style={this.props.containerStyle}>
-        <DescriptionGroup tooltip={this.props.tooltip} label={this.props.label} description={this.props.description} />
+        <DescriptionGroup
+          tooltip={this.props.tooltip}
+          label={this.props.label}
+          description={this.props.description}
+        />
         <input
           ref={(c) => {
             this._input = c;
@@ -129,16 +138,21 @@ export class Input extends React.Component {
           onChange={this._handleChange}
           autoComplete="off"
           readOnly={this.props.readOnly}
-          type={this.props.type}
           style={{
             ...this.props.style,
             boxShadow: this.props.validation
-              ? `0 1px 4px rgba(0, 0, 0, 0.07), 0 0 4px ${INPUT_COLOR_MAP[this.props.validation]}`
+              ? `0 1px 4px rgba(0, 0, 0, 0.07), inset 0 0 0 2px ${
+                  INPUT_COLOR_MAP[this.props.validation]
+                }`
               : null,
           }}
         />
         {this.props.copyable ? (
-          <SVG.CopyAndPaste height="16px" css={STYLES_COPY_AND_PASTE} onClick={this._handleCopy} />
+          <SVG.CopyAndPaste
+            height="16px"
+            css={STYLES_COPY_AND_PASTE}
+            onClick={this._handleCopy}
+          />
         ) : null}
       </div>
     );
