@@ -1,4 +1,4 @@
-import * as Constants from '~/node_common/constants';
+import * as Constants from '../node_common/constants';
 
 import FS from 'fs-extra';
 
@@ -130,7 +130,10 @@ export const refreshLibrary = async ({ state, PG, FFS }) => {
     for (let j = 0; j < state.library[i].children.length; j++) {
       if (state.library[i].children[j].job_id) {
         if (state.library[i].children[j].storage_status === 1) {
-          console.log('[ prototype ] update file', state.library[i].children[j]);
+          console.log(
+            '[ prototype ] update file',
+            state.library[i].children[j]
+          );
           state.library[i].children[j].storage_status = 2;
           write = true;
           continue;
@@ -139,7 +142,10 @@ export const refreshLibrary = async ({ state, PG, FFS }) => {
         PG.ffs.watchJobs((job) => {
           console.log('[ prototype ] job status', job.status);
           if (job.status === FFS.JobStatus.JOB_STATUS_SUCCESS) {
-            console.log('[ prototype ] update file', state.library[i].children[j]);
+            console.log(
+              '[ prototype ] update file',
+              state.library[i].children[j]
+            );
             state.library[i].children[j].storage_status = 6;
             write = true;
           }
@@ -149,7 +155,10 @@ export const refreshLibrary = async ({ state, PG, FFS }) => {
   }
 
   if (write) {
-    FS.writeFileSync('./.data/library.json', JSON.stringify({ library: state.library }));
+    FS.writeFileSync(
+      './.data/library.json',
+      JSON.stringify({ library: state.library })
+    );
   }
 
   return { ...state };
