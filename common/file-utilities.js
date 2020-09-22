@@ -1,3 +1,5 @@
+import extractZip from "~/common/extract-zip";
+
 import { dispatchCustomEvent } from "~/common/custom-events";
 
 export const upload = async ({ file, context, bucketName }) => {
@@ -9,8 +11,21 @@ export const upload = async ({ file, context, bucketName }) => {
     return null;
   }
 
-  // TODO(jim): Put this somewhere else to handle conversion cases.
-  if (file.type.startsWith("image/heic")) {
+  if (
+    file.type.startsWith("application/zip") ||
+    file.type.startsWith("application/x-zip-compressed")
+  ) {
+    const results = await extractZip(file);
+    const extractedFiles = results.filter((item) => item !== undefined);
+
+    extractedFiles.forEach((item) => {
+      formData.append(`${item.path}`, item.data);
+    });
+
+    console.log(extractedFiles);
+  } else if (file.type.startsWith("image/heic")) {
+    // TODO(jim): Put this somewhere else to handle conversion cases.
+
     const converted = await HEIC2ANY({
       blob: file,
       toType: "image/png",

@@ -16,17 +16,32 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
         highWaterMark: HIGH_WATER_MARK,
       });
 
-      form.on("file", async function(
+      form.on("file", async function (
         fieldname,
         stream,
         filename,
         encoding,
         mime
       ) {
-        data = LibraryManager.createLocalDataIncomplete({
-          name: filename,
-          type: mime,
-        });
+        // console.log(fieldname);
+        const isUnityFile = fieldname.startsWith("unity-file");
+
+        if (isUnityFile) {
+          let dirName = fieldname.split("|")[1];
+
+          data = LibraryManager.createLocalDataIncomplete(
+            {
+              name: filename,
+              type: mime,
+            },
+            `data-${dirName}`
+          );
+        } else {
+          data = LibraryManager.createLocalDataIncomplete({
+            name: filename,
+            type: mime,
+          });
+        }
 
         const {
           buckets,
@@ -46,7 +61,19 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
         let push;
         try {
           console.log("[upload] pushing to textile");
-          push = await buckets.pushPath(bucketKey, data.id, stream);
+          if (isUnityFile) {
+            const filePath = `${data.id}/${fieldname.split("|")[2]}`;
+
+            push = await buckets.pushPath(bucketKey, filePath, {
+              path: filePath,
+              content: stream,
+            });
+
+            console.log(push);
+          } else {
+            push = await buckets.pushPath(bucketKey, data.id, stream);
+          }
+
           console.log("[upload] finished pushing to textile");
         } catch (e) {
           Social.sendTextileSlackMessage({
@@ -125,6 +152,6 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
       message: e,
     };
   }
-
+  console.log(response.data);
   return { decorator: "SERVER_UPLOAD_SUCCESS", data, ipfs: response.data };
 };
