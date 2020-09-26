@@ -36,6 +36,9 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
             },
             `data-${dirName}`
           );
+
+          // (NOTE: daniel) identity file type
+          data.isUnityFile = true;
         } else {
           data = LibraryManager.createLocalDataIncomplete({
             name: filename,
@@ -68,8 +71,6 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
               path: filePath,
               content: stream,
             });
-
-            console.log(push);
           } else {
             push = await buckets.pushPath(bucketKey, data.id, stream);
           }
@@ -91,9 +92,12 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
           });
         }
 
+        // (NOTE: daniel) root path to unity game folder
+        const { item } = await buckets.listPath(bucketKey, data.id);
+
         return resolve({
           decorator: "SERVER_BUCKET_STREAM_SUCCESS",
-          data: push.path.path,
+          data: isUnityFile ? item.path : push.path.path,
         });
       });
 
@@ -152,6 +156,6 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
       message: e,
     };
   }
-  console.log(response.data);
+
   return { decorator: "SERVER_UPLOAD_SUCCESS", data, ipfs: response.data };
 };
