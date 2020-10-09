@@ -1,15 +1,29 @@
 import * as LibraryManager from "~/node_common/managers/library";
 import * as Utilities from "~/node_common/utilities";
 import * as Social from "~/node_common/social";
+import iterateStream from "~/node_common/iterateStream";
+import unzipper from "unzipper";
 
 import B from "busboy";
 
 const HIGH_WATER_MARK = 1024 * 1024 * 3;
 
-export const formMultipart = async (req, res, { user, bucketName }) => {
-  let data = null;
+const unZip = async (stream, onEntry) => {
+  const zip = stream.pipe(unzipper.Parse({ forceStream: true, verbose: true }));
 
-  let promises = [];
+  for await (const entry of iterateStream(zip)) {
+    const fileName = entry.path;
+    console.log("unzippy", fileName);
+    const type = entry.type;
+    if (type === "File") {
+      await onEntry(entry, fileName);
+    } else {
+      entry.autodrain();
+    }
+  }
+};
+
+export const formMultipart = async (req, res, { user, bucketName }) => {
   const upload = () =>
     new Promise(async (resolve, reject) => {
       let form = new B({
@@ -18,51 +32,71 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
         fileHwm: HIGH_WATER_MARK,
       });
 
-      const { buckets, bucketKey } = await Utilities.getBucketAPIFromUserToken({
-        user,
-        bucketName,
-      });
-
-      const data = LibraryManager.createLocalDataIncomplete({
-        name: "fresh-bowling.zip",
-        type: "applicattion/zip",
-      });
-
       form.on("file", async function (fieldname, stream, filename, encoding, mime) {
-        let dirName = fieldname.split("|")[0];
-        console.log("BACKEND DIR", dirName);
+        const data = LibraryManager.createLocalDataIncomplete({
+          name: filename,
+          type: mime,
+        });
 
-        if (!buckets) {
-          return reject({
-            decorator: "SERVER_BUCKET_INIT_FAILURE",
-            error: true,
-          });
-        }
-
-        try {
-          const filePath = `${data.id}/${fieldname.split("|")[1]}`;
-          console.log("[upload] pushing to textile", filePath);
-          const push = await buckets.pushPath(bucketKey, filePath, {
-            path: filePath,
-            content: stream,
-          });
-          console.log(push);
-          promises.push(push);
-          console.log("[upload] finished pushing to textile", filePath);
-        } catch (e) {
-          Social.sendTextileSlackMessage({
-            file: "/node_common/upload.js",
+        await unZip(stream, async (entry, fileName) => {
+          const { buckets, bucketKey } = await Utilities.getBucketAPIFromUserToken({
             user,
-            message: e.message,
-            code: e.code,
-            functionName: `buckets.pushPath`,
+            bucketName,
           });
 
-          return reject({
-            decorator: "SERVER_UPLOAD_ERROR",
-            error: true,
-            message: e.message,
+          if (!buckets) {
+            return reject({
+              decorator: "SERVER_BUCKET_INIT_FAILURE",
+              error: true,
+            });
+          }
+
+          try {
+            console.log("[upload] pushing to textile", fileName);
+            const push = await buckets.pushPath(
+              bucketKey,
+              `${data.id}/${fileName}`,
+              {
+                path: `${data.id}/${fileName}`,
+                content: entry,
+              },
+              {
+                progress: (num) => console.log(`${fileName} Progress`, num),
+              }
+            );
+            console.log("[upload] finished pushing to textile", push);
+          } catch (e) {
+            console.log("ERROR HAPPENED AT UPLOAD FILES", e);
+            Social.sendTextileSlackMessage({
+              file: "/node_common/upload.js",
+              user,
+              message: e.message,
+              code: e.code,
+              functionName: `buckets.pushPath`,
+            });
+
+            return reject({
+              decorator: "SERVER_UPLOAD_ERROR",
+              error: true,
+              message: e.message,
+            });
+          }
+        });
+        try {
+          const { buckets, bucketKey } = await Utilities.getBucketAPIFromUserToken({
+            user,
+            bucketName,
           });
+          const {
+            item: { path },
+          } = await buckets.listPath(bucketKey, data.id);
+          console.log("ALL FILES UPLOAD", path);
+          return resolve({
+            decorator: "SERVER_BUCKET_STREAM_SUCCESS",
+            data: path,
+          });
+        } catch (e) {
+          console.log("ERROR HAPPENED ON FINISH EVENT", e);
         }
       });
 
@@ -81,25 +115,14 @@ export const formMultipart = async (req, res, { user, bucketName }) => {
           message: e.message,
         });
       });
-      form.on("finish", async () => {
-        try {
-          await Promise.allSettled(promises);
-          const push = await buckets.listPath(bucketKey, data.id);
-          console.log("ALL FILES UPLOAD", push);
-          return resolve({
-            decorator: "SERVER_BUCKET_STREAM_SUCCESS",
-            data: push.item,
-          });
-        } catch (e) {
-          console.log("ERROR HAPPENED ON FINISH EVENT".e);
-        }
-      });
       req.pipe(form);
     });
 
   const response = await upload();
 
+  console.log("[ upload ]", response);
   if (response && response.error) {
+    console.log("[ upload ] ending due to errors.", e);
     return response;
   }
 

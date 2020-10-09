@@ -20,16 +20,7 @@ export const upload = async ({ file, context, bucketName }) => {
   const isFileZip =
     file.type.startsWith("application/zip") || file.type.startsWith("application/x-zip-compressed");
   // TODO(jim): Put this somewhere else to handle conversion cases.
-  if (isFileZip) {
-    const results = await extractZip(file);
-    const extractedFiles = results.filter((item) => item !== undefined);
-
-    extractedFiles.forEach((item) => {
-      formData.append(`${item.path}`, item.data);
-    });
-
-    console.log("FRONTEND EXTRACTION", extractedFiles);
-  } else if (file.type.startsWith("image/heic")) {
+  if (file.type.startsWith("image/heic")) {
     const converted = await HEIC2ANY({
       blob: file,
       toType: "image/png",
@@ -180,39 +171,39 @@ export const uploadToSlate = async ({ responses, slate }) => {
   });
 };
 
-const extractZip = async (file) => {
-  let zip = new JSZip();
+// const extractZip = async (file) => {
+//   let zip = new JSZip();
 
-  const getFileMeta = (dir) => {
-    const start = dir.lastIndexOf("/");
-    const name = dir.slice(start + 1);
-    const ext = dir.split(".").pop();
+//   const getFileMeta = (dir) => {
+//     const start = dir.lastIndexOf("/");
+//     const name = dir.slice(start + 1);
+//     const ext = dir.split(".").pop();
 
-    return { name, ext };
-  };
+//     return { name, ext };
+//   };
 
-  const contents = await zip.loadAsync(file);
-  const dirName = file.name.split(".zip")[0].toLowerCase();
+//   const contents = await zip.loadAsync(file);
+//   const dirName = file.name.split(".zip")[0].toLowerCase();
 
-  const results = Promise.all(
-    Object.keys(contents.files).map(async (filename) => {
-      const isDir = contents.files[filename].dir;
+//   const results = Promise.all(
+//     Object.keys(contents.files).map(async (filename) => {
+//       const isDir = contents.files[filename].dir;
 
-      if (!isDir) {
-        let content = await zip.file(filename).async("blob");
-        const { name, ext } = getFileMeta(filename);
-        let file = new File([content], name, { type: mime.lookup(ext) });
+//       if (!isDir) {
+//         let content = await zip.file(filename).async("blob");
+//         const { name, ext } = getFileMeta(filename);
+//         let file = new File([content], name, { type: mime.lookup(ext) });
 
-        // (NOTE: daniel) unity file structure: unity-file|[name of zip folder]|[name of file in folder]
-        let item = {
-          path: `${dirName}|${filename}`,
-          data: file,
-        };
+//         // (NOTE: daniel) unity file structure: unity-file|[name of zip folder]|[name of file in folder]
+//         let item = {
+//           path: `${dirName}|${filename}`,
+//           data: file,
+//         };
 
-        return item;
-      }
-    })
-  );
+//         return item;
+//       }
+//     })
+//   );
 
-  return results;
-};
+//   return results;
+// };

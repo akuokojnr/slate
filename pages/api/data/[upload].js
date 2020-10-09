@@ -4,6 +4,9 @@ import * as Data from "~/node_common/data";
 import * as LibraryManager from "~/node_common/managers/library";
 import * as Strings from "~/common/strings";
 
+// NOTE(jim): To support multipart request.
+const STAGING_DEAL_BUCKET = "stage-deal";
+
 export const config = {
   api: {
     bodyParser: false,
@@ -19,43 +22,24 @@ export default async (req, res) => {
   });
 
   if (!user || user.error) {
-    return res
-      .status(403)
-      .send({ decorator: "UPLOAD_NOT_ALLOWED", error: true });
+    return res.status(403).send({ decorator: "UPLOAD_NOT_ALLOWED", error: true });
   }
 
   const response = await Upload.formMultipart(req, res, {
     user,
+    bucketName: STAGING_DEAL_BUCKET,
   });
 
   if (!response) {
-    return res
-      .status(404)
-      .send({ decorator: "SERVER_UPLOAD_ERROR", error: true });
+    return res.status(404).send({ decorator: "SERVER_UPLOAD_ERROR", error: true });
   }
 
   if (response.error) {
-    return res
-      .status(500)
-      .send({ decorator: response.decorator, error: response.error });
+    return res.status(500).send({ decorator: response.decorator, error: response.error });
   }
 
-  const { data, ipfs } = response;
-
-  const finalData = LibraryManager.updateDataIPFS(data, {
-    ipfs,
-  });
-
-  const slateId = req.params ? req.params.b : null;
-
-  await Data.createPendingData({
-    data: finalData,
-    owner_user_id: user.id,
-    slate_id: slateId,
-  });
-
   return res.status(200).send({
-    decorator: "SERVER_UPLOAD",
-    data: finalData,
+    decorator: "SERVER_DEAL_UPLOAD",
+    data: response,
   });
 };
