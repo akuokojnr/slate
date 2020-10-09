@@ -1,6 +1,5 @@
 import "isomorphic-fetch";
 
-import * as State from "~/common/state";
 import * as Strings from "~/common/strings";
 
 const REQUEST_HEADERS = {
@@ -8,59 +7,27 @@ const REQUEST_HEADERS = {
   "Content-Type": "application/json",
 };
 
-const dev = process.env.NODE_ENV !== "production";
+const DEFAULT_OPTIONS = {
+  method: "POST",
+  headers: REQUEST_HEADERS,
+  credentials: "include",
+};
 
-const SERVER_PATH = dev
-  ? "http://localhost:1337"
-  : "https://filecoin.onrender.com";
-
-export const rehydrateViewer = async () => {
-  const options = {
-    method: "POST",
-    headers: REQUEST_HEADERS,
-    credentials: "include",
-    body: JSON.stringify({}),
-  };
-
-  const response = await fetch(`${SERVER_PATH}/_/viewer`, options);
+const returnJSON = async (route, options) => {
+  const response = await fetch(route, options);
   const json = await response.json();
 
   return json;
 };
 
-export const setDefaultConfig = async (data) => {
-  const options = {
-    method: "POST",
-    headers: REQUEST_HEADERS,
-    credentials: "include",
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(`${SERVER_PATH}/_/settings`, options);
-  const json = await response.json();
-
-  return json;
+export const health = async (data = {}) => {
+  return await returnJSON(`/api/_`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data: { buckets: data.buckets } }),
+  });
 };
 
-export const createWalletAddress = async (data) => {
-  if (Strings.isEmpty(data.name)) {
-    return null;
-  }
-
-  const options = {
-    method: "POST",
-    headers: REQUEST_HEADERS,
-    credentials: "include",
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(`${SERVER_PATH}/_/wallet/create`, options);
-  const json = await response.json();
-
-  return json;
-};
-
-export const sendWalletAddressFilecoin = async (data) => {
+export const sendFilecoin = async (data) => {
   if (Strings.isEmpty(data.source)) {
     return null;
   }
@@ -73,15 +40,218 @@ export const sendWalletAddressFilecoin = async (data) => {
     return null;
   }
 
-  const options = {
-    method: "POST",
-    headers: REQUEST_HEADERS,
-    credentials: "include",
+  return await returnJSON(`/api/addresses/send`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const checkUsername = async (data) => {
+  return await returnJSON(`/api/users/check`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const archive = async (data) => {
+  return await returnJSON(`/api/data/archive`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const removeFromBucket = async (data) => {
+  return await returnJSON(`/api/data/bucket-remove`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const getNetworkDirectory = async () => {
+  return await returnJSON(`/api/directory`, {
+    ...DEFAULT_OPTIONS,
+  });
+};
+
+export const searchSlates = async (data) => {
+  return await returnJSON(`/api/search/slates/${data.query}`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const getSlateById = async (data) => {
+  return await returnJSON(`/api/slates/get`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteTrustRelationship = async (data) => {
+  return await returnJSON(`/api/users/trust-delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const updateTrustRelationship = async (data) => {
+  return await returnJSON(`/api/users/trust-update`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const createTrustRelationship = async (data) => {
+  return await returnJSON(`/api/users/trust`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const createSubscription = async (data) => {
+  return await returnJSON(`/api/subscribe`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const search = async (data) => {
+  if (Strings.isEmpty(data.query)) {
+    return { decorator: "NO_SERVER_TRIP", data: { results: [] } };
+  }
+
+  return await returnJSON(`/api/search/${data.query}`, {
+    ...DEFAULT_OPTIONS,
     body: JSON.stringify(data),
-  };
+  });
+};
 
-  const response = await fetch(`${SERVER_PATH}/_/wallet/send`, options);
-  const json = await response.json();
+export const processPendingFiles = async (data) => {
+  return await returnJSON(`/api/data/process-pending`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify(data),
+  });
+};
 
-  return json;
+export const addFileToSlate = async (data) => {
+  return await returnJSON(`/api/slates/add-url`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateViewer = async (data) => {
+  return await returnJSON(`/api/users/update`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify(data),
+  });
+};
+
+export const signIn = async (data) => {
+  return await returnJSON(`/api/sign-in`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const hydrateAuthenticatedUser = async () => {
+  return await returnJSON(`/api/hydrate`, {
+    ...DEFAULT_OPTIONS,
+  });
+};
+
+export const deleteViewer = async () => {
+  return await returnJSON(`/api/users/delete`, {
+    ...DEFAULT_OPTIONS,
+  });
+};
+
+export const createUser = async (data) => {
+  return await returnJSON(`/api/users/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const checkCIDStatus = async (data) => {
+  return await returnJSON(`/api/data/cid-status`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const createSlate = async (data) => {
+  return await returnJSON(`/api/slates/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const updateSlate = async (data) => {
+  return await returnJSON(`/api/slates/update`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteSlate = async (data) => {
+  return await returnJSON(`/api/slates/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteSlateItem = async (data) => {
+  return await returnJSON(`/api/slates/remove-item`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const generateAPIKey = async () => {
+  return await returnJSON(`/api/keys/generate`, {
+    ...DEFAULT_OPTIONS,
+  });
+};
+
+export const deleteAPIKey = async (data) => {
+  return await returnJSON(`/api/keys/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteBucketItem = async (data) => {
+  return await returnJSON(`/api/data/remove`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteBucketItems = async (data) => {
+  return await returnJSON(`/api/data/remove-multiple`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const getSerializedSlate = async (data) => {
+  return await returnJSON(`/api/slates/get-serialized`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const getSerializedProfile = async (data) => {
+  return await returnJSON(`/api/users/get-serialized`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const createSupportMessage = async (data) => {
+  return await returnJSON(`/api/support-message`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
 };

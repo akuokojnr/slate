@@ -2,6 +2,7 @@ import Head from "next/head";
 
 import * as React from "react";
 import * as SVG from "~/common/svg";
+import * as SVGLogo from "~/common/logo";
 import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
@@ -14,32 +15,20 @@ const STYLES_BODY = css`
   max-width: 960px;
   width: 100%;
   margin: 0 auto 0 auto;
-  padding: 88px 24px 128px 276px;
+  padding: 88px 24px 128px 336px;
 
   @media (max-width: 568px) {
     padding: 88px 24px 128px 24px;
   }
 `;
 
-const STYLES_ICON_ELEMENT = css`
-  height: 40px;
-  width: 40px;
-  border-radius: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: ${Constants.system.brand};
-  color: ${Constants.system.white};
-  user-select: none;
-`;
-
 const STYLES_SIDEBAR = css`
-  padding: 80px 24px 128px 24px;
+  padding: 88px 24px 128px 24px;
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
-  width: 252px;
+  width: 312px;
   background-color: ${Constants.system.foreground};
   overflow-y: scroll;
 
@@ -114,9 +103,7 @@ const SidebarLink = (props) => {
       >
         {props.title}
       </a>
-      {props.children ? (
-        <div css={STYLES_DESCRIPTION}>{props.children}</div>
-      ) : null}
+      {props.children ? <div css={STYLES_DESCRIPTION}>{props.children}</div> : null}
     </React.Fragment>
   );
 };
@@ -150,58 +137,64 @@ export default class SystemPage extends React.Component {
           <meta property="og:url" content={url} />
           <meta property="og:title" content={title} />
           <meta property="og:description" content={description} />
-          <meta property="og:image" content="/static/social.png" />
+          <meta
+            property="og:image"
+            content="https://slate.textile.io/ipfs/bafkreifknnc7rs7u7qrwc72dzaazzk3f3r4dnp3m4cuzdnr5zfckaet3se"
+          />
 
           <meta property="twitter:card" content="summary_large_image" />
           <meta property="twitter:url" content={url} />
           <meta property="twitter:title" content={title} />
           <meta property="twitter:description" content={description} />
-          <meta property="twitter:image" content="/static/social.png" />
+          <meta
+            property="twitter:image"
+            content="https://slate.textile.io/ipfs/bafkreifknnc7rs7u7qrwc72dzaazzk3f3r4dnp3m4cuzdnr5zfckaet3se"
+          />
 
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="/static/favicon-32x32.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="96x96"
-            href="/static/favicon-96x96.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="/static/favicon-16x16.png"
-          />
+          <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png" />
+          <link rel="icon" type="image/png" sizes="96x96" href="/static/favicon-96x96.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png" />
 
           <link rel="shortcut icon" href="/static/favicon.ico" />
         </Head>
         <div css={STYLES_BODY}>{children}</div>
         <div css={STYLES_SIDEBAR}>
-          <a css={STYLES_ICON_ELEMENT} href="/system">
-            <SVG.Logo height="32px" />
+          <a css={STYLES_LINK} href="/" style={{ marginTop: 0 }}>
+            <SVGLogo.Logo height="32px" style={{ marginBottom: 24 }} />
           </a>
-          <br />
-          <br />
-
           <span css={STYLES_LABEL}>Experiences</span>
           <SidebarLink
             url={url}
-            href="/experiences/peers-list"
-            title="Peers List"
+            href="/_/experiences/create-address"
+            title="CreateFilecoinAddress"
           />
           <SidebarLink
             url={url}
-            href="/experiences/create-address"
-            title="Create Filecoin Address"
+            href="/_/experiences/make-storage-deal"
+            title="CreateFilecoinStorageDeal"
           />
           <SidebarLink
             url={url}
-            href="/experiences/make-storage-deal"
-            title="Make a Storage Deal"
+            href="/_/experiences/generate-powergate-token"
+            title="CreateToken"
+          />
+          <SidebarLink
+            url={url}
+            href="/_/experiences/filecoin-wallet-balances"
+            title="FilecoinBalancesList"
+          />
+          <SidebarLink
+            url={url}
+            href="/_/experiences/list-filecoin-deals"
+            title="FilecoinDealsList"
+          />
+          <SidebarLink url={url} href="/_/experiences/filecoin-settings" title="FilecoinSettings" />
+          <SidebarLink url={url} href="/_/experiences/friends-list" title="FriendsList" />
+          <SidebarLink url={url} href="/_/experiences/peers-list" title="PeersList" />
+          <SidebarLink
+            url={url}
+            href="/_/experiences/send-address-filecoin"
+            title="SendAddressFilecoin"
           />
 
           <span css={STYLES_LABEL}>
@@ -209,97 +202,42 @@ export default class SystemPage extends React.Component {
             <br />
             Components
           </span>
-          <SidebarLink url={url} href="/system/globe" title="Globe" />
-          <SidebarLink url={url} href="/system/icons" title="Icons" />
-          <SidebarLink url={url} href="/system/colors" title="Colors" />
-          <SidebarLink url={url} href="/system/tables" title="Tables" />
-          <SidebarLink url={url} href="/system/tooltips" title="Tooltips" />
-          <SidebarLink url={url} href="/system/stats" title="Stats" />
-          <SidebarLink url={url} href="/system/buttons" title="Buttons" />
-          <SidebarLink url={url} href="/system/checkboxes" title="Checkboxes" />
-          <SidebarLink url={url} href="/system/radios" title="Radios" />
-          <SidebarLink url={url} href="/system/card-tabs" title="Card Tabs" />
-          <SidebarLink url={url} href="/system/tabs" title="Tabs" />
-          <SidebarLink url={url} href="/system/toggles" title="Toggles" />
-          <SidebarLink url={url} href="/system/inputs" title="Inputs" />
-          <SidebarLink url={url} href="/system/dropdowns" title="Dropdowns" />
+
+          <SidebarLink url={url} href="/_/system/avatar-group" title="Avatar Group" />
+          <SidebarLink url={url} href="/_/system/buttons" title="Buttons" />
+          <SidebarLink url={url} href="/_/system/card-tabs" title="Card Tabs" />
+          <SidebarLink url={url} href="/_/system/carousel" title="Carousel" />
+          <SidebarLink url={url} href="/_/system/checkboxes" title="Checkboxes" />
+          <SidebarLink url={url} href="/_/system/colors" title="Colors" />
+          <SidebarLink url={url} href="/_/system/datepicker" title="Datepicker" />
+          <SidebarLink url={url} href="/_/system/dropdowns" title="Dropdowns" />
+          <SidebarLink url={url} href="/_/system/globe" title="Globe" />
+          <SidebarLink url={url} href="/_/system/hover-tile" title="Hover Tile" />
+          <SidebarLink url={url} href="/_/system/icons" title="Icons" />
+          <SidebarLink url={url} href="/_/system/inputs" title="Inputs" />
+          <SidebarLink url={url} href="/_/system/line-chart" title="Line Chart" />
+          <SidebarLink url={url} href="/_/system/list-editor" title="List Editor" />
+          <SidebarLink url={url} href="/_/system/loaders" title="Loaders" />
+          <SidebarLink url={url} href="/_/system/modals" title="Modals" />
+          <SidebarLink url={url} href="/_/system/notifications" title="Notifications" />
+          <SidebarLink url={url} href="/_/system/radios" title="Radios" />
+          <SidebarLink url={url} href="/_/system/sliders" title="Sliders" />
+          <SidebarLink url={url} href="/_/system/stats" title="Stats" />
+          <SidebarLink url={url} href="/_/system/tables" title="Tables" />
+          <SidebarLink url={url} href="/_/system/tabs" title="Tabs" />
+          <SidebarLink url={url} href="/_/system/toggles" title="Toggles" />
+          <SidebarLink url={url} href="/_/system/tooltips" title="Tooltips" />
+          <SidebarLink url={url} href="/_/system/typography" title="Typography" />
 
           <div
             css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://filscan.io/");
-            }}
             style={{ marginTop: 48 }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            Block Explorer
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
             onClick={() => {
-              window.open(
-                "https://github.com/filecoin-project/filecoin-client"
-              );
+              window.open("https://github.com/filecoin-project/slate");
             }}
           >
             <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
             View source
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open(
-                "https://github.com/filecoin-shipyard/js-lotus-client"
-              );
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            JS Lotus Client
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://github.com/textileio/js-powergate-client");
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            JS Powergate Client
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://docs.textile.io/");
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            Textile Documentation
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://docs.lotu.sh/");
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            Lotus Documentation
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://docs.filecoin.io/");
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            Filecoin Documentation
-          </div>
-          <div
-            css={STYLES_SMALL_LINK}
-            onClick={() => {
-              window.open("https://filecoin.io/#community");
-            }}
-          >
-            <SVG.ExpandBox height="12px" style={{ marginRight: 10 }} />
-            Community
           </div>
         </div>
       </div>

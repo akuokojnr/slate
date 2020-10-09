@@ -2,7 +2,6 @@ import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
 import * as System from "~/components/system";
-import * as SchemaTable from "~/common/schema-table";
 
 import { css } from "@emotion/react";
 
@@ -35,7 +34,6 @@ export default class ScenePaymentChannels extends React.Component {
         {this.state.sub_navigation === "1" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title="Active payment channels"
             buttons={[
               {
@@ -48,12 +46,37 @@ export default class ScenePaymentChannels extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_ACTIVE_PAYMENT_CHANNELS",
               },
-            ]}>
+            ]}
+          >
             <System.Table
               onAction={this.props.onAction}
-              onNavigateTo={this.props.onNavigateTo}
               data={{
-                columns: SchemaTable.ActivePaymentChannel,
+                columns: [
+                  {
+                    key: "category",
+                    name: "Category",
+                    width: "120px",
+                    type: "TRANSACTION_DIRECTION",
+                  },
+                  { key: "channel-id", name: "Channel ID", width: "100%" },
+                  {
+                    key: "max-value",
+                    name: "Maximum Filecoin",
+                    width: "144px",
+                  },
+                  {
+                    key: "current-value",
+                    name: "Current Filecoin",
+                    width: "144px",
+                  },
+                  {
+                    key: "redeemable",
+                    hideLabel: true,
+                    type: "BUTTON",
+                    width: "144px",
+                    action: "SIDEBAR_REDEEM_PAYMENT_CHANNEL",
+                  },
+                ],
                 rows: this.props.viewer.payment_channels_active,
               }}
               selectedRowId={this.state.table_payment_channels_active}
@@ -66,7 +89,6 @@ export default class ScenePaymentChannels extends React.Component {
         {this.state.sub_navigation === "2" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title="Redeemed payment channels"
             buttons={[
               {
@@ -74,12 +96,30 @@ export default class ScenePaymentChannels extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_REDEEMED_PAYMENT_CHANNELS",
               },
-            ]}>
+            ]}
+          >
             <System.Table
               onAction={this.props.onAction}
-              onNavigateTo={this.props.onNavigateTo}
               data={{
-                columns: SchemaTable.RedeemedPaymentChannel,
+                columns: [
+                  {
+                    key: "category",
+                    name: "Category",
+                    width: "120px",
+                    type: "TRANSACTION_DIRECTION",
+                  },
+                  { key: "channel-id", name: "Channel ID", width: "100%" },
+                  {
+                    key: "max-value",
+                    name: "Maximum Filecoin",
+                    width: "144px",
+                  },
+                  {
+                    key: "redeemed-value",
+                    name: "Redeemed Filecoin",
+                    width: "144px",
+                  },
+                ],
                 rows: this.props.viewer.payment_channels_redeemed,
               }}
               selectedRowId={this.state.table_payment_channels_redeemed}

@@ -1,15 +1,17 @@
 import * as React from "react";
-import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
 
 const STYLES_SECTION = css`
+  flex-shrink: 0;
   width: 100%;
+  min-width: 960px;
   box-shadow: 0 0 0 1px ${Constants.system.gray}, 0 1px 4px rgba(0, 0, 0, 0.04);
   border-radius: 4px;
   font-weight: 400;
   margin-top: 24px;
+  white-space: pre-wrap;
 
   :first-child {
     margin-top: 0px;
@@ -22,9 +24,10 @@ const STYLES_HEADER = css`
   font-family: ${Constants.font.medium};
   font-size: ${Constants.typescale.lvl1};
   border-radius: 4px 4px 0 0;
-  padding: 24px;
+  padding: 24px 24px 24px 20px;
   overflow: hidden;
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
 `;
@@ -41,6 +44,7 @@ const STYLES_RIGHT = css`
 const STYLES_CHILDREN = css`
   background: ${Constants.system.white};
   border-radius: 0 0 4px 4px;
+  width: 100%;
 `;
 
 const STYLES_BUTTON = css`
@@ -68,13 +72,13 @@ const STYLES_BUTTON = css`
   }
 
   :focus {
-    box-shadow: inset 0 0 5px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.3) inset;
     outline: 0;
     border: 0;
   }
 `;
 
-export default (props) => {
+export const Section = (props) => {
   return (
     <div css={STYLES_SECTION} style={props.style}>
       <header css={STYLES_HEADER}>
@@ -83,13 +87,14 @@ export default (props) => {
           <div css={STYLES_RIGHT}>
             {props.buttons.map((b) => {
               return (
-                <span
+                <label
                   key={b.name}
+                  htmlFor={b.type}
                   css={STYLES_BUTTON}
-                  onClick={() => props.onAction(b)}
+                  onClick={b.type !== "file" ? () => props.onAction(b) : null}
                 >
                   {b.name}
-                </span>
+                </label>
               );
             })}
           </div>
@@ -99,3 +104,5 @@ export default (props) => {
     </div>
   );
 };
+
+export default Section;

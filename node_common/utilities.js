@@ -1,75 +1,220 @@
+import * as Environment from "~/node_common/environment";
+import * as Strings from "~/common/strings";
 import * as Constants from "~/node_common/constants";
+import * as Social from "~/node_common/social";
 
-import FS from "fs-extra";
+import JWT from "jsonwebtoken";
+import BCrypt from "bcrypt";
 
-export const resetFileSystem = async () => {
-  console.log("[ prototype ] deleting old token and library data ");
-  if (FS.existsSync(`./.data`)) {
-    FS.removeSync("./.data", { recursive: true });
-  }
+import { Buckets, PrivateKey, Pow, Client, ThreadID } from "@textile/hub";
 
-  console.log("[ prototype ] deleting old avatar data ");
-  if (FS.existsSync(Constants.AVATAR_STORAGE_URL)) {
-    FS.removeSync(Constants.AVATAR_STORAGE_URL, { recursive: true });
-  }
+const BUCKET_NAME = "data";
 
-  console.log("[ prototype ] deleting old file data ");
-  if (FS.existsSync(Constants.FILE_STORAGE_URL)) {
-    FS.removeSync(Constants.FILE_STORAGE_URL, { recursive: true });
-  }
-
-  console.log("[ prototype ] creating new avatar folder ");
-  FS.mkdirSync(Constants.AVATAR_STORAGE_URL, { recursive: true });
-  FS.writeFileSync(`${Constants.AVATAR_STORAGE_URL}.gitkeep`, "");
-
-  console.log("[ prototype ] creating new local file folder ");
-  FS.mkdirSync(Constants.FILE_STORAGE_URL, { recursive: true });
-  FS.writeFileSync(`${Constants.FILE_STORAGE_URL}.gitkeep`, "");
-
-  return true;
+const TEXTILE_KEY_INFO = {
+  key: Environment.TEXTILE_HUB_KEY,
+  secret: Environment.TEXTILE_HUB_SECRET,
 };
 
-// NOTE(jim): Data that does not require a Powergate token.
-export const refresh = async ({ PG }) => {
-  const Health = await PG.health.check();
-  const status = Health.status ? Health.status : null;
-  const messageList = Health.messageList ? Health.messageList : null;
+export const checkTextile = async () => {
+  try {
+    const response = await fetch("https://slate.textile.io/health", {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
 
-  const Peers = await PG.net.peers();
-  const peersList = Peers.peersList ? Peers.peersList : null;
+    if (response.status === 204) {
+      return true;
+    }
 
-  return { peersList, messageList, status };
-};
-
-// NOTE(jim): Data that does require a powergate token.
-export const refreshWithToken = async ({ PG }) => {
-  const Addresses = await PG.ffs.addrs();
-  const addrsList = Addresses.addrsList ? Addresses.addrsList : null;
-
-  const NetworkInfo = await PG.ffs.info();
-  const info = NetworkInfo.info ? NetworkInfo.info : null;
-
-  return { addrsList, info };
-};
-
-export const emitState = async ({ state, client, PG }) => {
-  const { peersList, messageList, status } = await refresh({ PG });
-  const { addrsList, info } = await refreshWithToken({ PG });
-
-  const data = await updateStateData(state, {
-    peersList,
-    messageList,
-    status,
-    addrsList,
-    info,
-    state,
-  });
-
-  if (client) {
-    client.send(JSON.stringify({ action: "UPDATE_VIEWER", data }));
+    Social.sendTextileSlackMessage({
+      file: "/node_common/utilities.js",
+      user: { username: "UNDEFINED" },
+      message: "https://slate.textile.io/health is down",
+      code: "N/A",
+      functionName: `checkTextile`,
+    });
+  } catch (e) {
+    Social.sendTextileSlackMessage({
+      file: "/node_common/utilities.js",
+      user: { username: "UNDEFINED" },
+      message: e.message,
+      code: e.code,
+      functionName: `checkTextile`,
+    });
   }
 
-  return data;
+  return false;
+};
+
+export const getIdFromCookie = (req) => {
+  let id = null;
+  if (Strings.isEmpty(req.headers.cookie)) {
+    return id;
+  }
+
+  const token = req.headers.cookie.replace(
+    /(?:(?:^|.*;\s*)WEB_SERVICE_SESSION_KEY\s*\=\s*([^;]*).*$)|^.*$/,
+    "$1"
+  );
+
+  if (!Strings.isEmpty(token)) {
+    try {
+      const decoded = JWT.verify(token, Environment.JWT_SECRET);
+      id = decoded.id;
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
+
+  return id;
+};
+
+export const encryptPassword = async (text, salt) => {
+  if (!text) {
+    return null;
+  }
+
+  let hash = text;
+  for (let i = 0; i < Environment.LOCAL_PASSWORD_ROUNDS_MANUAL; i++) {
+    hash = await BCrypt.hash(hash, salt);
+  }
+  hash = await BCrypt.hash(hash, Environment.LOCAL_PASSWORD_SECRET);
+
+  return hash;
+};
+
+export const parseAuthHeader = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  var matches = value.match(/(\S+)\s+(\S+)/);
+  return matches && { scheme: matches[1], value: matches[2] };
+};
+
+// NOTE(jim): Requires @textile/hub
+export const getPowergateAPIFromUserToken = async ({ user }) => {
+  const token = user.data.tokens.api;
+  const identity = await PrivateKey.fromString(token);
+  const power = await Pow.withKeyInfo(TEXTILE_KEY_INFO);
+  await power.getToken(identity);
+
+  // TODO(jim): Put this call into a file for all Textile related calls.
+  let info = {};
+  try {
+    const powerInfoResponse = await power.info();
+    info = powerInfoResponse.info;
+  } catch (e) {
+    Social.sendTextileSlackMessage({
+      file: "/node_common/utilities.js",
+      user,
+      message: e.message,
+      code: e.code,
+      functionName: `power.info`,
+    });
+  }
+
+  // TODO(jim): Put this call into a file for all Textile related calls.
+  let health = {};
+  try {
+    health = await power.health();
+  } catch (e) {
+    Social.sendTextileSlackMessage({
+      file: "/node_common/utilities.js",
+      user,
+      message: e.message,
+      code: e.code,
+      functionName: `power.health`,
+    });
+  }
+
+  return {
+    power,
+    powerHealth: health,
+    powerInfo: info,
+  };
+};
+
+export const setupWithThread = async ({ buckets }) => {
+  const client = new Client(buckets.context);
+
+  try {
+    const res = await client.getThread("buckets");
+
+    buckets.withThread(res.id.toString());
+  } catch (error) {
+    if (error.message !== "Thread not found") {
+      throw new Error(error.message);
+    }
+
+    const newId = ThreadID.fromRandom();
+    await client.newDB(newId, "buckets");
+    const threadID = newId.toString();
+
+    buckets.withThread(threadID);
+  }
+
+  return buckets;
+};
+
+// NOTE(jim): Requires @textile/hub
+export const getBucketAPIFromUserToken = async ({ user, bucketName, encrypted = false }) => {
+  const token = user.data.tokens.api;
+  const name = Strings.isEmpty(bucketName) ? BUCKET_NAME : bucketName;
+  const identity = await PrivateKey.fromString(token);
+  let buckets = await Buckets.withKeyInfo(TEXTILE_KEY_INFO);
+
+  await buckets.getToken(identity);
+
+  let root = null;
+
+  console.log(`[ buckets ] getOrCreate init ${name}`);
+
+  // NOTE(jim): captures `withThread` cases.
+  try {
+    buckets = await setupWithThread({ buckets });
+  } catch (e) {
+    console.log(`[ textile ] warning: ${e.message}`);
+  }
+
+  console.log(`[ buckets ] getOrCreate thread found for ${name}`);
+
+  // NOTE(jim): captures finding your bucket and or creating a new one.
+  try {
+    const roots = await buckets.list();
+    root = roots.find((bucket) => bucket.name === name);
+    if (!root) {
+      console.log(`[ buckets ] creating new bucket ${name}`);
+
+      if (encrypted) {
+        console.log("[ buckets ] this bucket will be encrypted");
+      }
+
+      const created = await buckets.create(name, encrypted);
+      root = created.root;
+    }
+  } catch (e) {
+    Social.sendTextileSlackMessage({
+      file: "/node_common/utilities.js",
+      user,
+      message: e.message,
+      code: e.code,
+      functionName: `buckets.getOrCreate`,
+    });
+
+    return { buckets: null, bucketKey: null, bucketRoot: null };
+  }
+
+  console.log(`[ buckets ] getOrCreate success for ${name}`);
+
+  return {
+    buckets,
+    bucketKey: root.key,
+    bucketRoot: root,
+    bucketName: name,
+  };
 };
 
 export const getFileName = (s) => {
@@ -81,35 +226,14 @@ export const getFileName = (s) => {
   return target.substr(target.lastIndexOf("/") + 1);
 };
 
-export const createFile = ({ id, data }) => {
-  return {
-    decorator: "FILE",
-    id: id,
-    icon: "PNG",
-    file: getFileName(id),
-    miner: null,
-    job_id: null,
-    cid: null,
-    date: new Date(),
-    size: data.size,
-    amount: 0,
-    remaining: null,
-    deal_category: 1,
-    retrieval_status: 0,
-    storage_status: 0,
-    errors: [],
-  };
-};
-
-export const createFolder = ({ id }) => {
+export const createFolder = ({ id, name }) => {
   return {
     decorator: "FOLDER",
     id,
     folderId: id,
     icon: "FOLDER",
-    file: getFileName(id),
-    name: getFileName(id),
-    pageTitle: null,
+    name: name ? name : getFileName(id),
+    pageTitle: `Exploring ${getFileName(id)}`,
     date: null,
     size: null,
     children: [],
@@ -121,46 +245,4 @@ export const updateStateData = async (state, newState) => {
     ...state,
     ...newState,
   };
-};
-
-// TODO(jim): Refactor this so we repeat this less often.
-export const refreshLibrary = async ({ state, PG, FFS }) => {
-  let write = false;
-  for (let i = 0; i < state.library.length; i++) {
-    for (let j = 0; j < state.library[i].children.length; j++) {
-      if (state.library[i].children[j].job_id) {
-        if (state.library[i].children[j].storage_status === 1) {
-          console.log(
-            "[ prototype ] update file",
-            state.library[i].children[j]
-          );
-          state.library[i].children[j].storage_status = 2;
-          write = true;
-          continue;
-        }
-
-        PG.ffs.watchJobs((job) => {
-          // NOTE(jim): FFS is undefined?
-          console.log("[ prototype ] job status", job.status);
-          if (job.status >= 5) {
-            console.log(
-              "[ prototype ] update file",
-              state.library[i].children[j]
-            );
-            state.library[i].children[j].storage_status = 6;
-            write = true;
-          }
-        }, state.library[i].children[j].job_id);
-      }
-    }
-  }
-
-  if (write) {
-    FS.writeFileSync(
-      "./.data/library.json",
-      JSON.stringify({ library: state.library })
-    );
-  }
-
-  return { ...state };
 };

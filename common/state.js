@@ -1,7 +1,7 @@
 const STATIC_ADDRESS_TYPE_MAP = {
-  bls: 'BLS',
-  secp256k1: 'SECP256K1',
-  multisig: 'MULTISIG',
+  bls: "BLS",
+  secp256k1: "SECP256K1",
+  multisig: "MULTISIG",
 };
 
 const transformAddresses = (addrsList, info) => {
@@ -24,12 +24,12 @@ const transformAddresses = (addrsList, info) => {
   });
 };
 
-const transformPeers = (peersList) => {
+const transformPeers = (peersList = []) => {
   return peersList.map((each) => {
     return {
       id: each.addrInfo.id,
-      'peer-avatar': null,
-      'chain-head': null,
+      "peer-avatar": null,
+      "chain-head": null,
       height: null,
       location: null,
       upload: null,
@@ -38,53 +38,95 @@ const transformPeers = (peersList) => {
   });
 };
 
-export const getInitialState = (props) => {
-  const { status, messageList, peersList, addrsList, info, library, local } = props;
+export const getSelectedState = (props) => {
+  if (!props) {
+    return null;
+  }
+
+  const { info } = props;
 
   if (!info || !info.id) {
     return {
-      id: null,
-      notifications: [],
-      payment_channels_active: [],
-      payment_channels_redeemed: [],
-      data_transfers: [],
-      peers: [],
-      deals: [],
-      addresses: [],
-      library: [],
+      address: "",
     };
   }
 
   return {
-    id: info.id,
-    name: local.name,
-    photoURL: local.photo,
-    upload_bandwidth: 0,
-    download_bandwidth: 0,
+    address: null,
+    address: info.defaultStorageConfig.cold.filecoin.addr,
+  };
+};
 
-    settings_deals_auto_approve: local.settings_deals_auto_approve,
+export const getInitialState = (props) => {
+  if (!props) {
+    return null;
+  }
 
-    settings_hot_enabled: info.defaultConfig.hot.enabled,
-    settings_hot_allow_unfreeze: info.defaultConfig.hot.allowUnfreeze,
-    settings_hot_ipfs_add_timeout: info.defaultConfig.hot.ipfs.addTimeout,
+  return { ...props };
+};
 
-    settings_cold_enabled: info.defaultConfig.cold.enabled,
-    settings_cold_default_address: info.defaultConfig.cold.filecoin.addr,
-    settings_cold_default_duration: info.defaultConfig.cold.filecoin.dealMinDuration,
-    settings_cold_default_replication_factor: info.defaultConfig.cold.filecoin.repFactor,
-    settings_cold_default_excluded_miners: info.defaultConfig.cold.filecoin.excludedMinersList,
-    settings_cold_default_trusted_miners: info.defaultConfig.cold.filecoin.trustedMinersList,
-    settings_cold_default_max_price: info.defaultConfig.cold.filecoin.maxPrice,
-    settings_cold_default_auto_renew: info.defaultConfig.cold.filecoin.renew.enabled,
-    settings_cold_default_auto_renew_max_price: info.defaultConfig.cold.filecoin.renew.threshold,
+export const _deprecated_getInitialState = (props) => {
+  if (!props) {
+    return null;
+  }
 
-    notifications: [],
-    payment_channels_active: [],
-    payment_channels_redeemed: [],
-    data_transfers: [],
-    peers: transformPeers(peersList),
-    deals: [],
-    addresses: transformAddresses(addrsList, info),
+  const {
+    id,
+    status,
+    stats,
+    messageList,
+    peersList,
+    addrsList,
+    info,
     library,
+    data,
+    settings,
+    username,
+    storageList,
+    retrievalList,
+    slates,
+    keys,
+  } = props;
+
+  return {
+    id,
+    username,
+    data,
+
+    // NOTE(jim): Local settings
+    settings_deals_auto_approve: settings.deals_auto_approve,
+
+    // NOTE(jim): Powergate Hot Settings
+    settings_hot_enabled: info.defaultStorageConfig.hot.enabled,
+    settings_hot_allow_unfreeze: info.defaultStorageConfig.hot.allowUnfreeze,
+    settings_hot_ipfs_add_timeout:
+      info.defaultStorageConfig.hot.ipfs.addTimeout,
+
+    // NOTE(jim): Powergate Cold Settings
+    settings_cold_enabled: info.defaultStorageConfig.cold.enabled,
+    settings_cold_default_address: info.defaultStorageConfig.cold.filecoin.addr,
+    settings_cold_default_duration:
+      info.defaultStorageConfig.cold.filecoin.dealMinDuration,
+    settings_cold_default_replication_factor:
+      info.defaultStorageConfig.cold.filecoin.repFactor,
+    settings_cold_default_excluded_miners:
+      info.defaultStorageConfig.cold.filecoin.excludedMinersList,
+    settings_cold_default_trusted_miners:
+      info.defaultStorageConfig.cold.filecoin.trustedMinersList,
+    settings_cold_default_max_price:
+      info.defaultStorageConfig.cold.filecoin.maxPrice,
+    settings_cold_default_auto_renew:
+      info.defaultStorageConfig.cold.filecoin.renew.enabled,
+    settings_cold_default_auto_renew_max_price:
+      info.defaultStorageConfig.cold.filecoin.renew.threshold,
+
+    storageList,
+    retrievalList,
+    slates,
+    keys,
+    stats,
+    library,
+    peers: transformPeers(peersList),
+    addresses: transformAddresses(addrsList, info),
   };
 };

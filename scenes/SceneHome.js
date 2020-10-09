@@ -1,137 +1,91 @@
 import * as React from "react";
-import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
 import * as System from "~/components/system";
-import * as SchemaTable from "~/common/schema-table";
-import * as Data from "~/common/data";
 
 import { css } from "@emotion/react";
+import { WarningMessage } from "~/components/core/WarningMessage";
 
-import GLRenderer from "~/components/three/GLRenderer";
 import Section from "~/components/core/Section";
 import ScenePage from "~/components/core/ScenePage";
+import DataView from "~/components/core/DataView";
+import ScenePageHeader from "~/components/core/ScenePageHeader";
 
-const STYLES_ROW = css`
-  display: flex;
-  margin-top: 24px;
+const STYLES_VIDEO_BIG = css`
+  display: block;
+  background-color: ${Constants.system.moonstone};
+  padding: 0;
+  outline: 0;
+  margin: 48px auto 88px auto;
+  border-radius: 4px;
   width: 100%;
+  box-shadow: 0px 10px 50px 20px rgba(0, 0, 0, 0.1);
 
-  :first-child {
-    margin-top: 0px;
-  }
-`;
-
-const STYLES_COLUMN = css`
-  display: inline-flex;
-  padding: 0 12px 0 12px;
-  max-width: 25%;
-  width: 100%;
-
-  :first-child {
-    padding: 0 12px 0 0;
+  @media (max-width: ${Constants.sizes.tablet}px) {
+    margin: 32px auto 64px auto;
   }
 
-  :last-child {
-    padding: 0 0 0 12px;
-  }
-
-  @media (max-width: 768px) {
-    max-width: 100%;
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    margin: 24px auto 48px auto;
   }
 `;
 
 export default class SceneHome extends React.Component {
-  state = {
-    data: null,
-    transaction: null,
-  };
-
-  _handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
+  _handleCreateSlate = () => {
+    this.props.onAction({
+      type: "NAVIGATE",
+      value: "V1_NAVIGATION_SLATES",
+      data: null,
+    });
   };
 
   render() {
+    let hasChildren = false;
+    if (this.props.viewer && this.props.viewer.library[0].children.length) {
+      hasChildren = true;
+    }
+
     return (
       <ScenePage>
-        {this.props.viewer.library[0] ? (
-          <Section
-            onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
-            title="Recent data"
-            buttons={[
-              {
-                name: "View files",
-                type: "NAVIGATE",
-                value: this.props.viewer.library[0].folderId,
-              },
-              {
-                name: "Store file on network",
-                type: "SIDEBAR",
-                value: "SIDEBAR_FILE_STORAGE_DEAL",
-              },
-            ]}>
-            <System.Table
-              data={{
-                columns: [
-                  { key: "file", name: "File", type: "FILE_LINK" },
-                  {
-                    key: "size",
-                    name: "Size",
-                    width: "140px",
-                    type: "FILE_SIZE",
-                  },
-                  {
-                    key: "date",
-                    name: "Date uploaded",
-                    width: "160px",
-                    type: "FILE_DATE",
-                  },
-                  {
-                    key: "storage_status",
-                    name: "Status",
-                    type: "DEAL_STATUS",
-                  },
-                ],
-                rows: this.props.viewer.library[0].children,
-              }}
-              selectedRowId={this.state.data}
-              onChange={this._handleChange}
-              onAction={this.props.onAction}
-              onNavigateTo={this.props.onNavigateTo}
-              name="data"
-            />
-          </Section>
-        ) : null}
+        <ScenePageHeader title="Home">
+          {hasChildren
+            ? "Welcome back! Here is your data."
+            : "Welcome to Slate! You can share files with anyone in the world. Here is how it works:"}
+        </ScenePageHeader>
 
-        {this.props.viewer.addresses[0] ? (
-          <Section
-            onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
-            title="Wallet addresses"
-            buttons={[
-              {
-                name: "View all",
-                type: "NAVIGATE",
-                value: 2,
-              },
-            ]}>
-            <System.Table
-              data={{
-                columns: [
-                  { key: "address", name: "Address" },
-                  { key: "balance", name: "Filecoin", width: "228px" },
-                  { key: "type", name: "Type" },
-                ],
-                rows: this.props.viewer.addresses,
-              }}
-              selectedRowId={this.state.transaction}
-              onChange={this._handleChange}
+        {hasChildren ? (
+          <div style={{ marginTop: "48px" }}>
+            <DataView
+              viewer={this.props.viewer}
+              items={this.props.viewer.library[0].children}
               onAction={this.props.onAction}
-              onNavigateTo={this.props.onNavigateTo}
-              name="transaction"
+              onRehydrate={this.props.onRehydrate}
             />
-          </Section>
-        ) : null}
+          </div>
+        ) : (
+          <React.Fragment>
+            <video
+              css={STYLES_VIDEO_BIG}
+              autoPlay
+              loop
+              muted
+              src="https://slate.textile.io/ipfs/bafybeienjmql6lbtsaz3ycon3ttliohcl7qbquwvny43lhcodky54z65cy"
+              type="video/m4v"
+              playsInline
+              style={{
+                backgroundImage: `url('https://slate.textile.io/ipfs/bafybeienjmql6lbtsaz3ycon3ttliohcl7qbquwvny43lhcodky54z65cy')`,
+                borderRadius: `4px`,
+                width: `100%`,
+                boxShadow: `0px 10px 50px 20px rgba(0, 0, 0, 0.1)`,
+                backgroundSize: `cover`,
+              }}
+            />
+            <System.P>When you're ready, create a slate!</System.P>
+            <br />
+            <System.ButtonPrimary onClick={this._handleCreateSlate}>
+              Create a slate
+            </System.ButtonPrimary>
+          </React.Fragment>
+        )}
       </ScenePage>
     );
   }

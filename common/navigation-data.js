@@ -1,52 +1,202 @@
-const constructFilesTreeForNavigation = (library) => {
-  for (let i = 0; i < library.length; i++) {
-    for (let j = 0; j < library[i].children.length; j++) {
-      let e = library[i].children[j];
-      if (e.decorator === "FILE") {
-        library[i].children[j].ignore = true;
+import * as Strings from "~/common/strings";
+
+// NOTE(jim):
+// Recursion for nested entities (any number).
+export const getCurrentById = (navigation, targetId) => {
+  let target = null;
+  let activeIds = {};
+
+  const findById = (state, id) => {
+    for (let i = 0; i < state.length; i++) {
+      if (state[i].id === id) {
+        target = state[i];
+        activeIds[state[i].id] = true;
+      }
+
+      if (!target && state[i].children) {
+        activeIds[state[i].id] = true;
+        findById(state[i].children, id);
+
+        if (!target) {
+          activeIds[state[i].id] = false;
+        }
       }
     }
-  }
+  };
 
-  return library;
+  findById(navigation, targetId);
+
+  return { target, activeIds };
 };
 
-export const generate = (library) => [
+const constructFilesTreeForNavigation = (library) => {
+  return {
+    ...library[0],
+    name: `Data`,
+    children: [
+      {
+        id: "V1_NAVIGATION_ENCRYPTED_DATA",
+        decorator: "ENCRYPTED",
+        name: "Encrypted Data",
+        pageTitle: "Encrypted data",
+        children: null,
+      },
+    ],
+  };
+};
+
+const constructSlatesTreeForNavigation = (slates) => {
+  return slates.map((s) => {
+    return {
+      ...s,
+      slateId: s.id,
+      name: Strings.getPresentationSlateName(s),
+      pageTitle: `Viewing ${s.slatename}`,
+      decorator: "SLATE",
+      ignore: true,
+    };
+  });
+};
+
+export const generate = ({ library = [], slates = [] }) => [
   {
-    id: 1,
-    name: "Home",
-    pageTitle: "home",
+    id: "V1_NAVIGATION_HOME",
     decorator: "HOME",
+    name: "Home",
+    pageTitle: "Welcome back!",
     children: null,
   },
   {
-    id: 2,
-    name: "Wallet",
-    pageTitle: "your wallet and addresses",
+    id: "V1_NAVIGATION_DIRECTORY",
+    decorator: "DIRECTORY",
+    name: "Directory",
+    pageTitle: "Your directory",
+    children: null,
+  },
+  {
+    id: "V1_NAVIGATION_SLATES",
+    decorator: "SLATES",
+    name: "Slates",
+    pageTitle: "Slates",
+    children: null,
+  },
+  {
+    id: "V1_NAVIGATION_SLATE",
+    decorator: "PUBLIC_SLATE",
+    name: "Slate",
+    pageTitle: "Slate",
+    children: null,
+    ignore: true,
+  },
+  ...constructSlatesTreeForNavigation(slates),
+  constructFilesTreeForNavigation(library),
+  /*
+  {
+    id: "V1_NAVIGATION_LOCAL",
+    decorator: "LOCAL_DATA",
+    name: "Local",
+    pageTitle: "Your local data",
+    children: [],
+    ignore: false,
+  },
+  {
+    id: "V1_NAVIGATION_WALLET",
     decorator: "WALLET",
-  },
-  ...constructFilesTreeForNavigation(library),
+    name: "Wallet",
+    pageTitle: "Your wallet and addresses",
+    children: [
+      {
+        id: "V1_NAVIGATION_DEAL_HISTORY",
+        decorator: "DEALS",
+        name: "Deal history",
+        pageTitle: "Your deal history",
+      },
+    ],
+  }, 
   {
-    id: 13,
-    name: "Edit account",
-    pageTitle: "your account",
+    id: "V1_NAVIGATION_NETWORK",
+    decorator: "NETWORK",
+    name: "Network",
+    pageTitle: "The Filecoin Network",
+    children: null,
+  },
+  */
+  {
+    id: "V1_NAVIGATION_API",
+    decorator: "SETTINGS_DEVELOPER",
+    name: "API",
+    pageTitle: "Developer API",
+    children: [],
+  },
+  {
+    id: "V1_NAVIGATION_ARCHIVE",
+    decorator: "FILECOIN",
+    name: "Filecoin",
+    pageTitle: "Archive on Filecoin",
+    filecoin: true,
+    children: [
+      {
+        id: "V1_NAVIGATION_NETWORK",
+        decorator: "NETWORK",
+        name: "Network API",
+        pageTitle: "The Filecoin Network",
+        children: null,
+        filecoin: true,
+      },
+      {
+        id: "V1_NAVIGATION_WALLET",
+        decorator: "WALLET",
+        name: "Wallet",
+        pageTitle: "Your wallet and addresses",
+        children: [],
+        filecoin: true,
+      },
+      {
+        id: "V1_NAVIGATION_FILECOIN_SETTINGS",
+        decorator: "SETTINGS",
+        name: "Deal Settings",
+        pageTitle: "Deal Settings.",
+        filecoin: true,
+        children: null,
+      },
+      {
+        id: "V1_NAVIGATION_MINERS",
+        decorator: "MINERS",
+        name: "Trusted miners",
+        pageTitle: "Trusted miners",
+        filecoin: true,
+        children: null,
+      },
+    ],
+  },
+  {
+    id: "V1_NAVIGATION_FILECOIN_STORAGE_DEAL",
+    decorator: "MAKE_DEAL",
+    name: "Storage Deal",
+    filecoin: true,
+    pageTitle: "Make an one-off Filecoin storage deal",
+  },
+  {
+    id: "V1_NAVIGATION_PROFILE_EDIT",
     decorator: "EDIT_ACCOUNT",
+    name: "Profile & Account Settings",
+    pageTitle: "Your Profile & Account Settings",
     children: null,
     ignore: true,
   },
   {
-    id: 14,
-    name: "Settings",
-    pageTitle: "your settings",
-    decorator: "SETTINGS",
+    id: "V1_NAVIGATION_PROFILE",
+    decorator: "PUBLIC_PROFILE",
+    name: "Profile",
+    pageTitle: "Profile",
     children: null,
     ignore: true,
   },
   {
-    id: 15,
-    name: null,
-    pageTitle: "files",
+    id: "V1_NAVIGATION_FILE",
     decorator: "FILE",
+    name: "File",
+    pageTitle: "File",
     children: null,
     ignore: true,
   },

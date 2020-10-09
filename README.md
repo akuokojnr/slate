@@ -1,77 +1,91 @@
-# Slate (WIP)
+![Slate](https://user-images.githubusercontent.com/310223/92346209-e368d580-f080-11ea-8693-0fb64f8d3b97.jpg)
 
-- (WIP) Cross platform OSS.
-- (WIP) Amazon S3 replacement.
-- (WIP) Aims to have every feature the [Filecoin Network](https://filecoin.io) supports.
-- (WIP) Great for storing images and sharing high resolution photos with friends.
-- [Design system](https://slate.host/system) -> [Release repository](https://github.com/filecoin-project/slate-react-system).
+# Slate
 
-#### Current prototype (June 15th, 2020)
+### An open source storage system for your data that makes it easy to collect, organize, and share them anywhere on the web.
 
-![screenshot](https://user-images.githubusercontent.com/310223/84873452-1c704b80-b038-11ea-8398-4a73c4d9850e.png)
+- [Create an account and try it out!](https://slate.host)
+- [Use our components](https://slate.host/_/system)
+- [Design System Release Repository](https://github.com/filecoin-project/slate-react-system)
+- [Filecoin](https://filecoin.io)
+- [Textile](https://textile.io)
+- [Twitter](https://twitter.com/_slate)
 
-## Developer Introduction
+### Introduction
 
-### Run locally (MacOS)
+![Slate Preview](https://user-images.githubusercontent.com/310223/92346093-94bb3b80-f080-11ea-8ac6-c4cce3cd1aec.gif)
 
-- DevNet and Powergate are not required if you just want to work on the [design system](https://slate.host/system).
+Slate is the first open source file storage application designed to encourage collaboration and research across a distributed network. It is a first step towards enabling a thriving network for data storage and transactions powered by IPFS, Filecoin and Textile that is open and usable for everyone. Our goal is to provide a meaningful story for every feature the protocol provides today and in the future. The Slate Project is the byproduct of a growing community of contributors from around the world.
 
-#### Satisfy dependency requirements
+Slate is tightly scoped for the present and more broadly thought out for the future. Our primary objective is to create a best-in-class experience for uploading, collecting, and sharing media. Additional filetypes will be supported, but our focus is to start with the pieces that apply to everyone and then dial into more specific formats.
 
-- Make sure you have [homebrew](https://brew.sh/).
-- Make sure you run `xcode-select -p`, if the command does not return a response, run `xcode-select --install`.
-- Make sure you run `brew install node`.
-- Make sure you run `brew install go`.
+- Example slate: https://slate.host/tara/loom
+- Example user profile: https://slate.host/gndclouds
+- New brand: https://slate.host/narative/slate-brand-identity
+- Monet on Filecoin: https://slate.host/slate/monet
 
-#### Setup Docker
+### Developer API
 
-- `brew install docker`.
-- Install [Docker for Desktop](https://www.docker.com/products/docker-desktop) if you are running MacOS.
+Slate has a Developer API that allows you upload files using code and HTTP. 
 
-#### Setup Lotus DevNet and Powergate
+Every user who creates an account on Slate can use the API. Here is an example:
 
-- Clone the [Lotus DevNet](https://github.com/textileio/lotus-devnet) repository.
-- Run `docker run --name texdevnet -e TEXLOTUSDEVNESPEED=1500 -p 1234:7777 textile/lotus-devnet`.
-- Clone [Powergate](https://github.com/textileio/powergate/).
-- Follow the instructions and run the commands in the README.md file:
+```js
+const response = await fetch('https://slate.host/api/v1/get', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Basic XXX-YOUR-SLATE-KEY-XXX',
+  }
+});
+```
 
-```sh
-cd docker
-make localnet
+[Create an account and try it out!](https://slate.host/_)
+
+# Get involved
+
+Slate is built by a growing community of collaborators and contributors. We’d love for you to join us! 
+
+How?
+
+- Find something you want to work on and [file an issue](https://github.com/filecoin-project/slate/issues).
+- If you see something you want to fix or change, **submit a PR**.
+- Reach out at any time. We're always available on Twitter to answer your questions: [@\_slate](https://www.twitter.com/_slate).
+
+## Slate Development Guide
+
+- To work on Slate you must have an internet connection.
+- We don't have windows support at the moment.
+
+### .env
+
+- You must create a `.env` file if you want to work on the service.
+- You don't need one if you work on the system.
+
+```
+POSTGRES_ADMIN_PASSWORD=XXX
+POSTGRES_ADMIN_USERNAME=XXX
+POSTGRES_HOSTNAME=XXX
+POSTGRES_DATABASE=XXX
+JWT_SECRET=XXX
+LOCAL_PASSWORD_SECRET=XXX
+LOCAL_PASSWORD_ROUNDS_MANUAL=5
+LOCAL_PASSWORD_ROUNDS=14
+TEXTILE_HUB_KEY=XXX
+TEXTILE_HUB_SECRET=XXX
 ```
 
 ### Install and run
 
-Run these commands to start the client locally.
-
-- **Note** — There might be a small delay between Powergate and Lotus.
-
 ```sh
-git clone git@github.com:filecoin-project/slate.git
+git clone https://github.com/filecoin-project/slate.git
 cd slate
 npm install
+
+# Run using existing .data folder
 npm run dev
 ```
 
-### Example of what to expect
-
 ![screenshot](https://user-images.githubusercontent.com/310223/84878302-7d028700-b03e-11ea-82c4-c53dca9d7e65.png)
 
-- Visit `localhost:1337` in the browser.
-- If you see the design system page instead, that means a token was not properly generated in the `.data` folder. Run `npm run dev` again.
-- **Note** — If you restart the server, it clears all your local files. You can disable this by modifying the code in `server.js`.
-- **Note** — There will be new commands in the future for different contexts, like `electron`.
-
-# Get involed.
-
-Do you want to...
-
-- Help us build a design system for internal use?
-- Help us build out this example so every partner in the ecosystem can have example code to work with?
-
-Then...
-
-- If you see things you want to work on, [file an issue](https://github.com/filecoin-project/slate/issues)!
-- If you see something you want to fix, **submit a PR**!
-- I'm always available on Twitter to answer your questions: [@wwwjim](https://www.twitter.com/wwwjim).
-- For any build questions feel free to reach out to Colin: <cs.mccaleb@gmail.com>
+- Visit `localhost:1337` in a browser.

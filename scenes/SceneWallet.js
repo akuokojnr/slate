@@ -1,43 +1,27 @@
 import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
-import * as SVG from "~/components/system/svg";
+import * as SVG from "~/common/svg";
 import * as System from "~/components/system";
-import * as SchemaTable from "~/common/schema-table";
 
 import { css } from "@emotion/react";
+import { dispatchCustomEvent } from "~/common/custom-events";
+import { LoaderSpinner } from "~/components/system/components/Loaders";
 
 import Section from "~/components/core/Section";
 import ScenePage from "~/components/core/ScenePage";
+import ScenePageHeader from "~/components/core/ScenePageHeader";
+import TestnetBanner from "~/components/core/TestnetBanner";
 
 const STYLES_GROUP = css`
   padding: 24px;
 `;
 
-const STYLES_TARGET = css`
-  position: fixed;
-  top: -1;
-  left: -1;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  visibility: hidden;
-`;
-
-const STYLES_QR_CODE = css`
-  background: ${Constants.system.white};
-  border-radius: 4px;
-  max-width: 188px;
-  width: 100%;
-  padding: 4px;
-  border: 1px solid ${Constants.system.border};
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
-`;
-
-const STYLES_QR_CODE_IMAGE = css`
-  display: block;
-  margin: 0;
-  padding: 0;
+const STYLES_ROW = css`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
   width: 100%;
 `;
 
@@ -54,17 +38,11 @@ const STYLES_CIRCLE_BUTTON = css`
   cursor: pointer;
 `;
 
-const STYLES_ROW = css`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 24px;
-`;
-
 const STYLES_TEXT = css`
   min-width: 5%;
   padding-top: 6px;
   width: 100%;
+  overflow-wrap: break-word;
 `;
 
 const STYLES_FOCUS = css`
@@ -86,6 +64,7 @@ const STYLES_FOCUS_EMPAHSIS = css`
 const STYLES_SUBTEXT = css`
   margin-top: 8px;
   font-size: 12px;
+  overflow-wrap: break-word;
 `;
 
 const STYLES_ACTIONS = css`
@@ -101,27 +80,39 @@ const STYLES_ITEM = css`
   margin-right: 32px;
 `;
 
-const STYLES_ITEM_CLICKABLE = css`
-  margin-top: 24px;
-  display: inline-flex;
-  flex-direction: column;
-  max-width: 180px;
-  margin-right: 32px;
-  transition: 200ms ease color;
-
-  :hover {
-    cursor: pointer;
-    color: ${Constants.system.brand};
-  }
-`;
-
 const STYLES_ITEM_GROUP = css`
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
 `;
 
+let mounted = false;
+
 export default class SceneWallet extends React.Component {
+  state = {};
+
+  async componentDidMount() {
+    if (mounted) {
+      return null;
+    }
+
+    mounted = true;
+    let networkViewer;
+    try {
+      const response = await fetch("/api/network");
+      const json = await response.json();
+      networkViewer = json.data;
+    } catch (e) {}
+
+    this.setState({
+      networkViewer,
+    });
+  }
+
+  componentWillUnmount() {
+    mounted = false;
+  }
+
   state = { table_transaction: null, visible: false };
 
   _handleChange = (e) => {
@@ -139,120 +130,134 @@ export default class SceneWallet extends React.Component {
 
   _handleCopy = (text) => {
     Strings.copyText(text);
-    alert(`${text} Added to clipboard.`);
+    dispatchCustomEvent({
+      name: "create-alert",
+      detail: { alert: { message: "Copied to clipboard!", status: "INFO" } },
+    });
   };
 
   render() {
-    let addresses = {};
-    let lastAddress;
+    // TODO(jim): Temporary because of read only Filecoin Addresses
+    const { networkViewer } = this.state;
 
-    this.props.viewer.addresses.forEach((a) => {
-      addresses[a.address] = a;
-      lastAddress = a.address;
-    });
+    const addressMap = {};
+    const addresses = [];
+    let selected = null;
 
-    const currentAddress = this.props.selected.address
-      ? addresses[this.props.selected.address]
-      : addresses[lastAddress];
+    if (networkViewer) {
+      networkViewer.powerInfo.balancesList.forEach((a) => {
+        addressMap[a.addr.addr] = { ...a.addr, balance: a.balance };
+        addresses.push({ ...a.addr, balance: a.balance });
+      });
 
-    // TODO(jim):
-    // Capture this state.
-    if (!currentAddress) {
-      return null;
-    }
+      if (addresses.length) {
+        selected = addresses[0];
+      }
 
-    let transactions = [];
-    if (currentAddress.transactions) {
-      transactions = [...currentAddress.transactions];
+      let transactions = [];
+      if (selected.transactions) {
+        transactions = [...selected.transactions];
+      }
     }
 
     return (
       <ScenePage>
-        <System.H1>Wallet</System.H1>
+        <ScenePageHeader title="Wallet">
+          This is your receive only wallet address. You can deposit Filecoin to
+          your address here.
+        </ScenePageHeader>
 
-        <Section
-          onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
-          title="Addresses"
-          buttons={[
+        {networkViewer ? (
+          <Section
+            onAction={this.props.onAction}
+            title="Your Filecoin Testnet address"
+            style={{ maxWidth: `688px`, minWidth: "auto" }}
+            buttons={
+              [
+                /*
             {
               name: "Create a new address",
               type: "SIDEBAR",
               value: "SIDEBAR_CREATE_WALLET_ADDRESS",
             },
-          ]}>
-          <div css={STYLES_GROUP}>
+            */
+              ]
+            }
+          >
+            {/* <div css={STYLES_GROUP}>
             <System.SelectMenu
               label="Select your address"
               name="address"
-              value={this.props.selected.address}
+              value={selected.addr}
               category="address"
               onChange={this._handleWalletChange}
-              options={this.props.viewer.addresses}>
-              {currentAddress.name}
-            </System.SelectMenu>
-          </div>
+              options={addresses}
+            />
+          </div> */}
 
-          <div css={STYLES_ROW} style={{ marginTop: 24 }}>
-            <div css={STYLES_TEXT}>
-              <div>
-                <div css={STYLES_FOCUS}>
-                  {this.state.visible ? currentAddress.address : <span css={STYLES_FOCUS_EMPAHSIS}>Hidden</span>}
+            <div css={STYLES_ROW} style={{ marginTop: 24 }}>
+              <div css={STYLES_TEXT}>
+                <div>
+                  <div css={STYLES_FOCUS}>
+                    {this.state.visible ? (
+                      selected.addr
+                    ) : (
+                      <span css={STYLES_FOCUS_EMPAHSIS}>Hidden</span>
+                    )}
+                  </div>
+                  <div css={STYLES_SUBTEXT}>Filecoin address</div>
                 </div>
-                <div css={STYLES_SUBTEXT}>Filecoin address</div>
+
+                <div style={{ marginTop: 24 }}>
+                  <div css={STYLES_FOCUS}>
+                    {selected.name}{" "}
+                    {networkViewer.settings_cold_default_address ===
+                    selected.addr ? (
+                      <strong css={STYLES_FOCUS_EMPAHSIS}>(Primary)</strong>
+                    ) : null}
+                  </div>
+                  <div css={STYLES_SUBTEXT}>Filecoin address alias</div>
+                </div>
+
+                <div css={STYLES_ITEM_GROUP}>
+                  <div css={STYLES_ITEM}>
+                    <div css={STYLES_FOCUS}>
+                      {Strings.formatAsFilecoinConversion(selected.balance)}
+                    </div>
+                    <div css={STYLES_SUBTEXT}>Filecoin</div>
+                  </div>
+
+                  <div css={STYLES_ITEM}>
+                    <div css={STYLES_FOCUS}>{selected.type}</div>
+                    <div css={STYLES_SUBTEXT}>Address type</div>
+                  </div>
+                </div>
               </div>
-
-              <div style={{ marginTop: 24 }}>
-                <div css={STYLES_FOCUS}>
-                  {currentAddress.name}{" "}
-                  {this.props.viewer.settings_cold_default_address === currentAddress.address ? (
-                    <strong css={STYLES_FOCUS_EMPAHSIS}>(Primary)</strong>
-                  ) : null}
-                </div>
-                <div css={STYLES_SUBTEXT}>Filecoin address alias</div>
-              </div>
-
-              <div css={STYLES_ITEM_GROUP}>
-                <div css={STYLES_ITEM}>
-                  <div css={STYLES_FOCUS}>{Strings.formatNumber(currentAddress.balance)}</div>
-                  <div css={STYLES_SUBTEXT}>Filecoin</div>
-                </div>
-
-                <div css={STYLES_ITEM}>
-                  <div css={STYLES_FOCUS}>{currentAddress.type}</div>
-                  <div css={STYLES_SUBTEXT}>Address type</div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 24 }}>
-                <System.ButtonPrimary
-                  onClick={() =>
-                    this.props.onAction({
-                      name: "Send Filecoin",
-                      type: "SIDEBAR",
-                      value: "SIDEBAR_WALLET_SEND_FUNDS",
-                    })
-                  }>
-                  Send Filecoin
-                </System.ButtonPrimary>
+              <div css={STYLES_ACTIONS}>
+                <span
+                  css={STYLES_CIRCLE_BUTTON}
+                  onClick={this._handleMakeAddressVisible}
+                  style={{
+                    marginRight: 16,
+                    backgroundColor: this.state.visible
+                      ? null
+                      : Constants.system.brand,
+                  }}
+                >
+                  <SVG.Privacy height="16px" />
+                </span>
+                <span
+                  css={STYLES_CIRCLE_BUTTON}
+                  onClick={() => this._handleCopy(selected.address)}
+                >
+                  <SVG.CopyAndPaste height="16px" />
+                </span>
               </div>
             </div>
-            <div css={STYLES_ACTIONS}>
-              <span
-                css={STYLES_CIRCLE_BUTTON}
-                onClick={this._handleMakeAddressVisible}
-                style={{
-                  marginRight: 16,
-                  backgroundColor: this.state.visible ? null : Constants.system.brand,
-                }}>
-                <SVG.Privacy height="16px" />
-              </span>
-              <span css={STYLES_CIRCLE_BUTTON} onClick={() => this._handleCopy(currentAddress.address)}>
-                <SVG.CopyAndPaste height="16px" />
-              </span>
-            </div>
-          </div>
-        </Section>
+          </Section>
+        ) : (
+          <LoaderSpinner style={{ marginTop: 48, height: 32, width: 32 }} />
+        )}
       </ScenePage>
     );
   }

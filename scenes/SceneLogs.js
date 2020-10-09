@@ -21,7 +21,8 @@ const TAB_GROUP = [
             color: Constants.system.white,
             position: "relative",
             marginLeft: 8,
-          }}>
+          }}
+        >
           14
         </Pill>
       </React.Fragment>
@@ -38,7 +39,8 @@ const TAB_GROUP = [
             color: Constants.system.white,
             position: "relative",
             marginLeft: 8,
-          }}>
+          }}
+        >
           14
         </Pill>
       </React.Fragment>
@@ -55,7 +57,8 @@ const TAB_GROUP = [
             color: Constants.system.white,
             position: "relative",
             marginLeft: 8,
-          }}>
+          }}
+        >
           56
         </Pill>
       </React.Fragment>
@@ -72,7 +75,8 @@ const TAB_GROUP = [
             color: Constants.system.white,
             position: "relative",
             marginLeft: 8,
-          }}>
+          }}
+        >
           56
         </Pill>
       </React.Fragment>
@@ -81,7 +85,7 @@ const TAB_GROUP = [
 ];
 
 const STYLES_SCENE = css`
-  max-width: 1024px;
+  max-width: ${Constants.sizes.desktop}px;
   width: 100%;
   padding: 24px 0 128px 0;
 `;
@@ -119,7 +123,6 @@ export default class SceneLogs extends React.Component {
         {this.state.sub_navigation === "1" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title={
               <React.Fragment>
                 All logs{" "}
@@ -129,7 +132,8 @@ export default class SceneLogs extends React.Component {
                     color: Constants.system.white,
                     position: "relative",
                     marginLeft: 8,
-                  }}>
+                  }}
+                >
                   14
                 </Pill>
               </React.Fragment>
@@ -145,7 +149,8 @@ export default class SceneLogs extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_LOGS_ALL",
               },
-            ]}>
+            ]}
+          >
             <div css={STYLES_LOGS}>
               message in mempool has too high of a nonce (5000 > 4686) <br />
               message in mempool has too high of a nonce (5000 > 4686) <br />
@@ -210,7 +215,6 @@ export default class SceneLogs extends React.Component {
         {this.state.sub_navigation === "2" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title={
               <React.Fragment>
                 Node logs{" "}
@@ -220,7 +224,8 @@ export default class SceneLogs extends React.Component {
                     color: Constants.system.white,
                     position: "relative",
                     marginLeft: 8,
-                  }}>
+                  }}
+                >
                   14
                 </Pill>
               </React.Fragment>
@@ -236,7 +241,8 @@ export default class SceneLogs extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_LOGS_NODE",
               },
-            ]}>
+            ]}
+          >
             <div css={STYLES_LOGS}>
               message in mempool has too high of a nonce (5000 > 4686) <br />
               message in mempool has too high of a nonce (5000 > 4686) <br />
@@ -301,7 +307,6 @@ export default class SceneLogs extends React.Component {
         {this.state.sub_navigation === "3" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title={
               <React.Fragment>
                 Sealing logs{" "}
@@ -311,7 +316,8 @@ export default class SceneLogs extends React.Component {
                     color: Constants.system.white,
                     position: "relative",
                     marginLeft: 8,
-                  }}>
+                  }}
+                >
                   56
                 </Pill>
               </React.Fragment>
@@ -327,7 +333,8 @@ export default class SceneLogs extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_LOGS_SEALING",
               },
-            ]}>
+            ]}
+          >
             <div css={STYLES_LOGS}>
               message in mempool has too high of a nonce (5000 > 4686) <br />
               message in mempool has too high of a nonce (5000 > 4686) <br />
@@ -392,7 +399,6 @@ export default class SceneLogs extends React.Component {
         {this.state.sub_navigation === "4" ? (
           <Section
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             title={
               <React.Fragment>
                 Mining logs{" "}
@@ -402,7 +408,8 @@ export default class SceneLogs extends React.Component {
                     color: Constants.system.white,
                     position: "relative",
                     marginLeft: 8,
-                  }}>
+                  }}
+                >
                   56
                 </Pill>
               </React.Fragment>
@@ -418,7 +425,8 @@ export default class SceneLogs extends React.Component {
                 type: "DOWNLOAD",
                 value: "CSV_LOGS_MINING",
               },
-            ]}>
+            ]}
+          >
             <div css={STYLES_LOGS}>
               message in mempool has too high of a nonce (5000 > 4686) <br />
               message in mempool has too high of a nonce (5000 > 4686) <br />

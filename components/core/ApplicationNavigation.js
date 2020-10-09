@@ -1,34 +1,53 @@
 import * as React from "react";
-import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
+import * as System from "~/components/system";
 import * as SVG from "~/common/svg";
 
 import { css } from "@emotion/react";
 
-import Pill from "~/components/core/Pill";
+import ApplicationUserControls from "~/components/core/ApplicationUserControls";
 
 const IconMap = {
   HOME: <SVG.Home height="20px" />,
-  FILE: <SVG.Image height="20px" />,
+  ENCRYPTED: <SVG.SecurityLock height="20px" />,
+  NETWORK: <SVG.Activity height="20px" />,
+  DIRECTORY: <SVG.Directory height="20px" />,
   FOLDER: <SVG.Folder height="20px" />,
-  WALLET: <SVG.Wallet height="20px" />,
-  CHANNELS: <SVG.Channels height="20px" />,
+  WALLET: <SVG.OldWallet height="20px" />,
   DEALS: <SVG.Deals height="20px" />,
-  PEERS: <SVG.Peers height="20px" />,
-  DEALS: <SVG.Deals height="20px" />,
-  STATUS: <SVG.Status height="20px" />,
-  STATS: <SVG.Stats height="20px" />,
-  DATA_TRANSFER: <SVG.DataTransfer height="20px" />,
-  LOGS: <SVG.Logs height="20px" />,
+  MAKE_DEAL: <SVG.HardDrive height="20px" />,
+  SLATES: <SVG.Layers height="20px" />,
+  SLATE: <SVG.Slate height="20px" />,
+  LOCAL_DATA: <SVG.HardDrive height="20px" />,
+  PROFILE_PAGE: <SVG.ProfileUser height="20px" />,
+  SETTINGS_DEVELOPER: <SVG.Tool height="20px" />,
+  SETTINGS: <SVG.Settings height="20px" />,
+  DIRECTORY: <SVG.Directory height="20px" />,
+  FILECOIN: <SVG.Wallet height="20px" />,
   MINERS: <SVG.Miners height="20px" />,
-  STORAGE_MARKET: <SVG.StorageMarket height="20px" />,
 };
 
+const STYLES_MOBILE_HIDDEN = css`
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    display: none;
+  }
+`;
+
 const STYLES_NAVIGATION = css`
+  margin-top: ${Constants.sizes.topOffset}px;
   width: 100%;
-  display; block;
+  display: block;
   padding: 24px 0 0 0;
-  font-size: 18px;
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-top: 0;
+    padding: 0;
+    height: 100%;
+    align-items: center;
+  }
 `;
 
 const STYLES_NAVIGATION_ITEM = css`
@@ -37,14 +56,22 @@ const STYLES_NAVIGATION_ITEM = css`
   justify-content: space-between;
   cursor: pointer;
   color: ${Constants.system.black};
+  user-select: none;
+  padding-right: 24px;
+  font-family: ${Constants.font.medium};
 
   :hover {
+    padding-right: 0px;
     color: ${Constants.system.brand};
   }
 `;
 
 const STYLES_EXPANDER = css`
   flex-shrink: 0;
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    display: none;
+  }
 `;
 
 const STYLES_ICON = css`
@@ -52,20 +79,23 @@ const STYLES_ICON = css`
   position: relative;
 `;
 
+// NOTE(jim): Adjusts on mobile.
 const STYLES_CHILDREN = css`
   min-width: 10%;
   width: 100%;
   height: 100%;
   overflow-wrap: break-word;
   padding: 11px 0px 14px 8px;
-  font-family: ${Constants.font.semiBold};
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 1.225;
+  font-family: ${Constants.font.medium};
+  font-size: ${Constants.typescale.lvl1};
   position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    display: none;
+  }
 `;
 
 const STYLES_ICON_ELEMENT = css`
@@ -80,91 +110,77 @@ const STYLES_ICON_ELEMENT = css`
     transform: rotate(0deg);
     transition: 200ms ease transform;
   }
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    margin: 0px;
+  }
 `;
 
-const Item = ({
-  data,
-  id,
-  activeId,
-  activeIds,
-  level,
-  children,
-  showActive,
-  treeChildren,
-  decorator,
-  onToggleShow,
-  onNavigateTo,
-}) => {
+const Item = (props) => {
   return (
     <span
       css={STYLES_NAVIGATION_ITEM}
-      style={{ padding: `0 0 0 ${level * 16}px` }}
+      style={{ padding: `0 0 0 ${props.level * 16}px` }}
     >
-      <span css={STYLES_EXPANDER} onClick={onToggleShow ? onToggleShow : null}>
+      <span
+        css={STYLES_EXPANDER}
+        onClick={props.onToggleShow ? props.onToggleShow : null}
+      >
         <span
           css={STYLES_ICON_ELEMENT}
           style={{
-            color: activeIds[id] ? Constants.system.brand : null,
+            color: props.activeIds[props.id] ? Constants.system.brand : null,
           }}
         >
-          {onToggleShow ? (
+          {props.treeChildren && props.treeChildren.length ? (
             <SVG.ExpandArrow
               height="8px"
-              style={showActive ? { transform: `rotate(90deg)` } : null}
+              style={props.expanded ? { transform: `rotate(90deg)` } : null}
             />
           ) : null}
         </span>
       </span>
-      <span css={STYLES_ICON} onClick={() => onNavigateTo({ id }, data)}>
+      <span
+        css={STYLES_ICON}
+        onClick={() =>
+          props.onAction({
+            type: "NAVIGATE",
+            value: props.id,
+            data: props.data,
+          })
+        }
+      >
         <span
           css={STYLES_ICON_ELEMENT}
+          children={IconMap[props.decorator]}
           style={{
-            color: activeIds[id] ? Constants.system.brand : null,
+            color: props.activeIds[props.id] ? Constants.system.brand : null,
           }}
-        >
-          {IconMap[decorator]}
-          {decorator === "LOGS" ? (
-            <Pill
-              style={{
-                left: 18,
-                top: `2px`,
-                background: Constants.system.black,
-              }}
-            >
-              56
-            </Pill>
-          ) : null}
-        </span>
+        />
       </span>
       <span
         css={STYLES_CHILDREN}
-        onClick={() => onNavigateTo({ id }, data)}
+        children={props.children}
+        onClick={() =>
+          props.onAction({
+            type: "NAVIGATE",
+            value: props.id,
+            data: props.data,
+          })
+        }
         style={{
-          fontFamily: decorator === "FILE" ? Constants.font.text : null,
-          color: activeIds[id] ? Constants.system.brand : null,
+          color: props.activeIds[props.id] ? Constants.system.brand : null,
         }}
-      >
-        {children}
-      </span>
+      />
     </span>
   );
 };
 
-const STYLES_SMALL_LINK = css`
-  padding: 0 16px 0 16px;
-  font-size: 14px;
-  font-family: ${Constants.font.semiBold};
-  margin-top: 11px;
-  color: #666;
-  transition: 200ms ease all;
-  cursor: pointer;
-
-  :hover {
-    color: ${Constants.system.brand};
-  }
-`;
-
 class NodeReference extends React.Component {
+  static defaultProps = {
+    treeChildren: [],
+  };
+
   state = {
     showTreeChildren: false,
   };
@@ -174,66 +190,41 @@ class NodeReference extends React.Component {
   };
 
   render() {
-    const {
-      id,
-      activeId,
-      activeIds,
-      level,
-      children,
-      treeChildren,
-      activePage,
-      decorator,
-      onNavigateTo,
-      data,
-    } = this.props;
-    const { showTreeChildren } = this.state;
-
-    let showActive = showTreeChildren || activeIds[id];
-    let showChildren = showActive && treeChildren && treeChildren.length;
-
     return (
       <React.Fragment>
         <Item
-          id={id}
-          data={data}
-          activeId={activeId}
-          activeIds={activeIds}
-          level={level}
-          showActive={showActive}
-          treeChildren={treeChildren}
-          onNavigateTo={onNavigateTo}
-          decorator={decorator}
-          onToggleShow={
-            treeChildren && treeChildren.length ? this._handleToggleShow : null
-          }
-        >
-          {children}
-        </Item>
+          id={this.props.id}
+          data={this.props.data}
+          activeId={this.props.activeId}
+          activeIds={this.props.activeIds}
+          level={this.props.level}
+          treeChildren={this.props.treeChildren}
+          onAction={this.props.onAction}
+          decorator={this.props.decorator}
+          onToggleShow={this._handleToggleShow}
+          expanded={this.state.showTreeChildren}
+          children={this.props.children}
+        />
 
-        {showChildren
-          ? treeChildren.map((child) => {
-              if (!child) {
-                return null;
-              }
-
-              if (child.ignore) {
+        {this.state.showTreeChildren && this.props.treeChildren
+          ? this.props.treeChildren.map((child) => {
+              if (!child || child.ignore) {
                 return null;
               }
 
               return (
                 <NodeReference
+                  key={child.id}
                   data={child}
                   id={child.id}
-                  activeId={activeId}
-                  activeIds={activeIds}
-                  key={child.id}
-                  onNavigateTo={onNavigateTo}
-                  level={level + 1}
+                  activeId={this.props.activeId}
+                  activeIds={this.props.activeIds}
+                  onAction={this.props.onAction}
+                  level={this.props.level + 1}
                   treeChildren={child.children}
                   decorator={child.decorator}
-                >
-                  {child.name}
-                </NodeReference>
+                  children={child.name}
+                />
               );
             })
           : null}
@@ -246,69 +237,44 @@ export default class ApplicationNavigation extends React.Component {
   render() {
     return (
       <nav css={STYLES_NAVIGATION}>
-        {this.props.navigation.map((each) => {
-          if (!each) {
-            return null;
-          }
+        <div css={STYLES_MOBILE_HIDDEN}>
+          <ApplicationUserControls
+            viewer={this.props.viewer}
+            onAction={this.props.onAction}
+            onSignOut={this.props.onSignOut}
+          />
+        </div>
 
-          if (each.ignore) {
+        {this.props.navigation.map((each, i) => {
+          if (!each || each.ignore) {
             return null;
           }
 
           return (
-            <NodeReference
-              data={each}
-              id={each.id}
-              acitveId={this.props.activeId}
-              activeIds={this.props.activeIds}
+            <div
               key={each.id}
-              onNavigateTo={this.props.onNavigateTo}
-              level={0}
-              treeChildren={each.children}
-              decorator={each.decorator}
+              css={
+                each.id === "V1_NAVIGATION_ARCHIVE" ||
+                each.id === "V1_NAVIGATION_API"
+                  ? STYLES_MOBILE_HIDDEN
+                  : null
+              }
             >
-              {each.name}
-            </NodeReference>
+              <NodeReference
+                data={each}
+                id={each.id}
+                acitveId={this.props.activeId}
+                activeIds={this.props.activeIds}
+                key={each.id}
+                level={0}
+                treeChildren={each.children}
+                decorator={each.decorator}
+                children={each.name}
+                onAction={this.props.onAction}
+              />
+            </div>
           );
         })}
-
-        <div
-          css={STYLES_SMALL_LINK}
-          onClick={() => {
-            window.open("https://filscan.io/");
-          }}
-          style={{ marginTop: 48 }}
-        >
-          <SVG.ExpandBox height="12px" style={{ marginRight: 14 }} />
-          Block Explorer
-        </div>
-        <div
-          css={STYLES_SMALL_LINK}
-          onClick={() => {
-            window.open("/system");
-          }}
-        >
-          <SVG.ExpandBox height="12px" style={{ marginRight: 14 }} />
-          Design System
-        </div>
-        <div
-          css={STYLES_SMALL_LINK}
-          onClick={() => {
-            window.open("https://docs.filecoin.io/");
-          }}
-        >
-          <SVG.ExpandBox height="12px" style={{ marginRight: 14 }} />
-          Documentation
-        </div>
-        <div
-          css={STYLES_SMALL_LINK}
-          onClick={() => {
-            window.open("https://filecoin.io/#community");
-          }}
-        >
-          <SVG.ExpandBox height="12px" style={{ marginRight: 14 }} />
-          Community
-        </div>
       </nav>
     );
   }

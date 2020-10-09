@@ -1,7 +1,10 @@
 export const POLLING_RATE = 5000;
-export const POWERGATE_HOST = "http://0.0.0.0:6002";
+export const MAX_BUCKET_COUNT = 100;
+export const POWERGATE_HOST = "https://grpcweb.slate.textile.io";
+export const IPFS_GATEWAY_URL = "https://slate.textile.io/ipfs";
+export const FILE_STORAGE_URL = "./public/static/files/";
+export const GITHUB_URL = "https://github.com/filecoin-project/slate";
+export const ANALYTICS_URL = "https://slate-stats-dev.azurewebsites.net/";
 
-export const AVATAR_STORAGE_URL = `./public/static/system/`;
-export const FILE_STORAGE_URL = `./public/static/files/`;
-
-export const GITHUB_URL = "https://github.com/filecoin-project/filecoin-client";
+// NOTE(jim): 4 GB from Ignacio
+export const TEXTILE_ACCOUNT_BYTE_LIMIT = 1073741824 * 4;

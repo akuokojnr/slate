@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
-import * as SVG from "~/components/system/svg";
+import * as SVG from "~/common/svg";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
@@ -28,9 +28,12 @@ export default class SidebarCreateWalletAddress extends React.Component {
     name: "",
     type: "1",
     default: false,
+    loading: false,
   };
 
-  _handleSubmit = () => {
+  _handleSubmit = async () => {
+    this.setState({ loading: true });
+
     const data = {
       name: this.state.name,
       wallet_type: SELECT_MENU_SAVE_STRINGS[this.state.type],
@@ -38,7 +41,9 @@ export default class SidebarCreateWalletAddress extends React.Component {
       type: "CREATE_WALLET_ADDRESS",
     };
 
-    this.props.onSubmit(data);
+    await this.props.onSubmit(data);
+
+    this.setState({ loading: false });
   };
 
   _handleCancel = () => {
@@ -52,7 +57,12 @@ export default class SidebarCreateWalletAddress extends React.Component {
   render() {
     return (
       <div>
-        <System.P style={{ fontFamily: Constants.font.semiBold }}>
+        <System.P
+          style={{
+            fontFamily: Constants.font.semiBold,
+            fontSize: Constants.typescale.lvl3,
+          }}
+        >
           Create a new address
         </System.P>
 
@@ -64,7 +74,8 @@ export default class SidebarCreateWalletAddress extends React.Component {
           onChange={this._handleChange}
         />
 
-        <System.SelectMenuFull
+        <System.SelectMenu
+          full
           containerStyle={{ marginTop: 24 }}
           name="type"
           label="Address type"
@@ -72,9 +83,7 @@ export default class SidebarCreateWalletAddress extends React.Component {
           category="type"
           onChange={this._handleChange}
           options={SELECT_MENU_OPTIONS}
-        >
-          {SELECT_MENU_MAP[this.state.type]}
-        </System.SelectMenuFull>
+        />
 
         <System.CheckBox
           style={{ marginTop: 24 }}
@@ -85,12 +94,22 @@ export default class SidebarCreateWalletAddress extends React.Component {
           Make this wallet the default
         </System.CheckBox>
 
-        <System.ButtonPrimaryFull
+        <System.ButtonPrimary
+          full
           style={{ marginTop: 48 }}
           onClick={this._handleSubmit}
+          loading={this.state.loading}
         >
           Create {this.state.name}
-        </System.ButtonPrimaryFull>
+        </System.ButtonPrimary>
+
+        <System.ButtonSecondary
+          full
+          style={{ marginTop: 16 }}
+          onClick={this._handleCancel}
+        >
+          Cancel
+        </System.ButtonSecondary>
       </div>
     );
   }

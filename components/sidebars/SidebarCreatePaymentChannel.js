@@ -1,10 +1,11 @@
 import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
-import * as SVG from "~/components/system/svg";
+import * as SVG from "~/common/svg";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
+import { dispatchCustomEvent } from "~/common/custom-events";
 
 const STYLES_FOCUS = css`
   font-size: ${Constants.typescale.lvl1};
@@ -31,7 +32,12 @@ export default class SidebarCreatePaymentChannel extends React.Component {
   state = { address: "", amount: "" };
 
   _handleSubmit = () => {
-    alert("TODO: Create a new payment channel");
+    dispatchCustomEvent({
+      name: "create-alert",
+      detail: {
+        alert: { message: "Creating payment channel...", status: "INFO" },
+      },
+    });
     this.props.onSubmit({});
   };
 
@@ -44,21 +50,19 @@ export default class SidebarCreatePaymentChannel extends React.Component {
   };
 
   render() {
-    let addresses = {};
-
-    this.props.viewer.addresses.forEach((a) => {
-      addresses[a.value] = a;
-    });
-
-    const currentAddress = addresses[this.props.selected.address];
-
     return (
       <React.Fragment>
-        <System.P style={{ fontFamily: Constants.font.semiBold }}>
+        <System.P
+          style={{
+            fontFamily: Constants.font.semiBold,
+            fontSize: Constants.typescale.lvl3,
+          }}
+        >
           Create a payment channel
         </System.P>
 
-        <System.SelectMenuFull
+        <System.SelectMenu
+          full
           containerStyle={{ marginTop: 24 }}
           name="address"
           label="From"
@@ -66,9 +70,7 @@ export default class SidebarCreatePaymentChannel extends React.Component {
           category="address"
           onChange={this.props.onSelectedChange}
           options={this.props.viewer.addresses}
-        >
-          {currentAddress.name}
-        </System.SelectMenuFull>
+        />
 
         <System.Input
           containerStyle={{ marginTop: 24 }}
@@ -96,12 +98,13 @@ export default class SidebarCreatePaymentChannel extends React.Component {
           <div css={STYLES_SUBTEXT}>Total Filecoin</div>
         </div>
 
-        <System.ButtonPrimaryFull
+        <System.ButtonPrimary
+          full
           style={{ marginTop: 48 }}
           onClick={this._handleSubmit}
         >
           Send
-        </System.ButtonPrimaryFull>
+        </System.ButtonPrimary>
       </React.Fragment>
     );
   }

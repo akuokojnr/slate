@@ -1,11 +1,12 @@
 import * as React from "react";
+
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
 
-import { LineChart } from "~/vendor/react-chartkick";
+// import { LineChart } from "~/vendor/react-chartkick";
 import Section from "~/components/core/Section";
 import ScenePage from "~/components/core/ScenePage";
 
@@ -136,7 +137,6 @@ export default class SceneStats extends React.Component {
 
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Wallet"
           buttons={[
             {
@@ -149,7 +149,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_STATS_WALLET",
             },
-          ]}>
+          ]}
+        >
           <div css={STYLES_ROW}>
             <div css={STYLES_LEFT}>Total FIL Balance</div>
             <div css={STYLES_RIGHT}>Value (FIL/ATTOFIL)</div>
@@ -173,7 +174,15 @@ export default class SceneStats extends React.Component {
           <div css={STYLES_ROW}>
             <div css={STYLES_LEFT}>
               Total wallet addresses{" "}
-              <strong css={STYLES_TEXT_CTA} onClick={() => this.props.onNavigateTo({ id: 2 })}>
+              <strong
+                css={STYLES_TEXT_CTA}
+                onClick={() =>
+                  this.props.onAction({
+                    type: "NAVIGATE",
+                    value: "V1_NAVIGATION_SLATES",
+                  })
+                }
+              >
                 (view)
               </strong>
             </div>
@@ -182,7 +191,15 @@ export default class SceneStats extends React.Component {
           <div css={STYLES_ROW}>
             <div css={STYLES_LEFT}>
               Total payment channels{" "}
-              <strong css={STYLES_TEXT_CTA} onClick={() => this.props.onNavigateTo({ id: 3 })}>
+              <strong
+                css={STYLES_TEXT_CTA}
+                onClick={() =>
+                  this.props.onAction({
+                    type: "NAVIGATE",
+                    value: "V1_NAVIGATION_SLATES",
+                  })
+                }
+              >
                 (view)
               </strong>
             </div>
@@ -191,7 +208,15 @@ export default class SceneStats extends React.Component {
           <div css={STYLES_ROW}>
             <div css={STYLES_LEFT}>
               Total FIL in payment channels{" "}
-              <strong css={STYLES_TEXT_CTA} onClick={() => this.props.onNavigateTo({ id: 3 })}>
+              <strong
+                css={STYLES_TEXT_CTA}
+                onClick={() =>
+                  this.props.onAction({
+                    type: "NAVIGATE",
+                    value: "V1_NAVIGATION_SLATES",
+                  })
+                }
+              >
                 (view)
               </strong>
             </div>
@@ -201,7 +226,6 @@ export default class SceneStats extends React.Component {
 
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Node"
           buttons={[
             {
@@ -214,7 +238,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_STATS_NODE",
             },
-          ]}>
+          ]}
+        >
           <div css={STYLES_GRAPH_ROW}>
             <div css={STYLES_GRAPH_ROW_LEFT}>
               <div css={STYLES_GRAPH_OBJECT}>
@@ -225,38 +250,6 @@ export default class SceneStats extends React.Component {
                   <span css={STYLES_OPTION}>6 Month</span>
                   <span css={STYLES_OPTION}>1 Year</span>
                 </div>
-                <LineChart
-                  data={[
-                    ["2017-01-01 00:00:00 UTC", 1],
-                    ["2018-01-01 00:00:00 UTC", 5],
-                    ["2019-01-01 00:00:00 UTC", 25],
-                    ["2020-01-01 00:00:00 UTC", 200],
-                    [new Date(), 400],
-                  ]}
-                  library={{
-                    backgroundColor: Constants.system.brand,
-                    scales: {
-                      xAxes: [
-                        {
-                          gridLines: { color: Constants.system.white },
-                          ticks: {
-                            fontColor: Constants.system.white,
-                          },
-                        },
-                      ],
-                      yAxes: [
-                        {
-                          gridLines: { color: Constants.system.white },
-                          display: false,
-                        },
-                      ],
-                    },
-                  }}
-                  dataset={{ lineTension: 0, pointRadius: 0, borderWidth: 1 }}
-                  width="100%"
-                  height="640px"
-                  colors={[Constants.system.white]}
-                />
               </div>
 
               <div css={STYLES_ITEM_GROUP}>
@@ -279,37 +272,6 @@ export default class SceneStats extends React.Component {
                   <span css={STYLES_OPTION}>6 Month</span>
                   <span css={STYLES_OPTION}>1 Year</span>
                 </div>
-                <LineChart
-                  data={[
-                    ["2017-01-01 00:00:00 UTC", 1],
-                    ["2018-01-01 00:00:00 UTC", 2],
-                    ["2019-01-01 00:00:00 UTC", 4],
-                    ["2020-01-01 00:00:00 UTC", 5],
-                    [new Date(), 4],
-                  ]}
-                  library={{
-                    backgroundColor: Constants.system.brand,
-                    scales: {
-                      xAxes: [
-                        {
-                          gridLines: { color: Constants.system.white },
-                          ticks: {
-                            fontColor: Constants.system.white,
-                          },
-                        },
-                      ],
-                      yAxes: [
-                        {
-                          display: false,
-                        },
-                      ],
-                    },
-                  }}
-                  dataset={{ lineTension: 0, pointRadius: 0, borderWidth: 1 }}
-                  width="100%"
-                  height="640px"
-                  colors={[Constants.system.white]}
-                />
               </div>
 
               <div css={STYLES_ITEM_GROUP}>
@@ -331,10 +293,7 @@ export default class SceneStats extends React.Component {
           </div>
           <div css={STYLES_ROW}>
             <div css={STYLES_LEFT}>
-              Favorite peers{" "}
-              <strong css={STYLES_TEXT_CTA} onClick={() => this.props.onNavigateTo({ id: 8 })}>
-                (view)
-              </strong>
+              Favorite peers <strong css={STYLES_TEXT_CTA}>(view)</strong>
             </div>
             <div css={STYLES_RIGHT}>42 peers</div>
           </div>
@@ -346,7 +305,6 @@ export default class SceneStats extends React.Component {
 
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Data"
           buttons={[
             {
@@ -359,7 +317,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_STATS_DATA",
             },
-          ]}>
+          ]}
+        >
           <div css={STYLES_GRAPH_ROW}>
             <div css={STYLES_GRAPH_ROW_LEFT}>
               <div css={STYLES_GRAPH_OBJECT}>
@@ -370,37 +329,6 @@ export default class SceneStats extends React.Component {
                   <span css={STYLES_OPTION}>6 Month</span>
                   <span css={STYLES_OPTION}>1 Year</span>
                 </div>
-                <LineChart
-                  data={[
-                    ["2017-01-01 00:00:00 UTC", 1],
-                    ["2018-01-01 00:00:00 UTC", 5],
-                    ["2019-01-01 00:00:00 UTC", 25],
-                    ["2020-01-01 00:00:00 UTC", 200],
-                    [new Date(), 400],
-                  ]}
-                  library={{
-                    backgroundColor: Constants.system.brand,
-                    scales: {
-                      xAxes: [
-                        {
-                          gridLines: { color: Constants.system.white },
-                          ticks: {
-                            fontColor: Constants.system.white,
-                          },
-                        },
-                      ],
-                      yAxes: [
-                        {
-                          display: false,
-                        },
-                      ],
-                    },
-                  }}
-                  dataset={{ lineTension: 0, pointRadius: 0, borderWidth: 1 }}
-                  width="100%"
-                  height="640px"
-                  colors={[Constants.system.white]}
-                />
               </div>
 
               <div css={STYLES_ITEM_GROUP}>
@@ -427,37 +355,6 @@ export default class SceneStats extends React.Component {
                   <span css={STYLES_OPTION}>6 Month</span>
                   <span css={STYLES_OPTION}>1 Year</span>
                 </div>
-                <LineChart
-                  data={[
-                    ["2017-01-01 00:00:00 UTC", 1],
-                    ["2018-01-01 00:00:00 UTC", 5],
-                    ["2019-01-01 00:00:00 UTC", 25],
-                    ["2020-01-01 00:00:00 UTC", 200],
-                    [new Date(), 400],
-                  ]}
-                  library={{
-                    backgroundColor: Constants.system.brand,
-                    scales: {
-                      xAxes: [
-                        {
-                          gridLines: { color: Constants.system.white },
-                          ticks: {
-                            fontColor: Constants.system.white,
-                          },
-                        },
-                      ],
-                      yAxes: [
-                        {
-                          display: false,
-                        },
-                      ],
-                    },
-                  }}
-                  dataset={{ lineTension: 0, pointRadius: 0, borderWidth: 1 }}
-                  width="100%"
-                  height="640px"
-                  colors={[Constants.system.white]}
-                />
               </div>
               <div css={STYLES_ITEM_GROUP}>
                 <div css={STYLES_ITEM}>
@@ -496,7 +393,6 @@ export default class SceneStats extends React.Component {
 
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Most commonly retrieved CIDs"
           buttons={[
             {
@@ -504,7 +400,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_MOST_COMMON_CIDS",
             },
-          ]}>
+          ]}
+        >
           <System.Table
             data={{
               columns: [
@@ -553,14 +450,12 @@ export default class SceneStats extends React.Component {
             }}
             selectedRowId={this.state.table_stats_common}
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             onChange={this._handleChange}
             name="table_stats_common"
           />
         </Section>
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Top storage deals by GB"
           buttons={[
             {
@@ -568,7 +463,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_TOP_STORAGE_DEALS_GB",
             },
-          ]}>
+          ]}
+        >
           <System.Table
             data={{
               columns: [
@@ -579,7 +475,8 @@ export default class SceneStats extends React.Component {
                   key: "date",
                   name: "Date uploaded",
                   width: "168px",
-                  tooltip: "This date represents when the file was first uploaded to the network.",
+                  tooltip:
+                    "This date represents when the file was first uploaded to the network.",
                 },
               ],
               rows: [],
@@ -587,13 +484,11 @@ export default class SceneStats extends React.Component {
             selectedRowId={this.state.table_storage_deals_gb}
             onChange={this._handleChange}
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             name="table_storage_deals_db"
           />
         </Section>
         <Section
           onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
           title="Top storage deals by FIL"
           buttons={[
             {
@@ -601,7 +496,8 @@ export default class SceneStats extends React.Component {
               type: "DOWNLOAD",
               value: "CSV_TOP_STORAGE_DEALS_FIL",
             },
-          ]}>
+          ]}
+        >
           <System.Table
             data={{
               columns: [
@@ -612,7 +508,8 @@ export default class SceneStats extends React.Component {
                   key: "date",
                   name: "Date uploaded",
                   width: "168px",
-                  tooltip: "This date represents when the file was first uploaded to the network.",
+                  tooltip:
+                    "This date represents when the file was first uploaded to the network.",
                 },
               ],
               rows: [],
@@ -620,7 +517,6 @@ export default class SceneStats extends React.Component {
             selectedRowId={this.state.table_storage_deals_fil}
             onChange={this._handleChange}
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
             name="table_storage_deals_fil"
           />
         </Section>

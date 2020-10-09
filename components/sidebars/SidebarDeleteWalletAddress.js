@@ -1,14 +1,20 @@
 import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
-import * as SVG from "~/components/system/svg";
+import * as SVG from "~/common/svg";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
+import { dispatchCustomEvent } from "~/common/custom-events";
 
 export default class SidebarDeleteWalletAddress extends React.Component {
   _handleSubmit = () => {
-    alert("TODO: Delete wallet address");
+    dispatchCustomEvent({
+      name: "create-alert",
+      detail: {
+        alert: { message: "Deleting wallet address...", status: "INFO" },
+      },
+    });
     this.props.onSubmit({});
   };
 
@@ -23,23 +29,30 @@ export default class SidebarDeleteWalletAddress extends React.Component {
   render() {
     return (
       <div>
-        <System.P style={{ fontFamily: Constants.font.semiBold }}>
+        <System.P
+          style={{
+            fontFamily: Constants.font.semiBold,
+            fontSize: Constants.typescale.lvl3,
+          }}
+        >
           Are you sure you want to delete the selected wallet?
         </System.P>
 
-        <System.ButtonPrimaryFull
+        <System.ButtonPrimary
+          full
           style={{ marginTop: 48 }}
           onClick={this._handleSubmit}
         >
           Delete
-        </System.ButtonPrimaryFull>
+        </System.ButtonPrimary>
 
-        <System.ButtonSecondaryFull
+        <System.ButtonSecondary
+          full
           style={{ marginTop: 16 }}
           onClick={this._handleCancel}
         >
           Cancel
-        </System.ButtonSecondaryFull>
+        </System.ButtonSecondary>
       </div>
     );
   }

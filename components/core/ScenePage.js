@@ -3,24 +3,28 @@ import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
 
-const STYLES_SCENE_BACKDROP = css`
-  background: ${Constants.system.white};
-  box-shadow: inset 1px 0 0 ${Constants.system.border};
-  width: 100%;
-`;
-
 const STYLES_SCENE = css`
-  max-width: 1296px;
+  flex-shrink: 0;
   width: 100%;
-  min-width: 10%;
-  min-height: 100vh;
-  padding: 48px 48px 128px 48px;
+  padding: 128px 48px 128px 48px;
+  display: block;
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    padding: 88px 24px 128px 24px;
+  }
 `;
 
-export default (props) => {
-  return (
-    <div css={STYLES_SCENE_BACKDROP}>
-      <div css={STYLES_SCENE} {...props} />
+const STYLES_CONTENT = css`
+  max-width: ${Constants.sizes.desktop}px;
+  margin: 0 auto;
+`;
+
+export const ScenePage = (props) => (
+  <div css={STYLES_SCENE} {...props}>
+    <div css={STYLES_CONTENT} style={props.contentstyle}>
+      {props.children}
     </div>
-  );
-};
+  </div>
+);
+
+export default ScenePage;

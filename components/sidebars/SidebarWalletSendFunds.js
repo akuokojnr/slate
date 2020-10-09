@@ -4,6 +4,7 @@ import * as Constants from "~/common/constants";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
+import { dispatchCustomEvent } from "~/common/custom-events";
 
 const STYLES_FOCUS = css`
   font-size: ${Constants.typescale.lvl1};
@@ -32,7 +33,8 @@ export default class SidebarWalletSendFunds extends React.Component {
     amount: "",
   };
 
-  _handleSubmit = () => {
+  _handleSubmit = async () => {
+    this.setState({ loading: true });
     let addresses = {};
 
     this.props.viewer.addresses.forEach((a) => {
@@ -42,18 +44,28 @@ export default class SidebarWalletSendFunds extends React.Component {
     const currentAddress = addresses[this.props.selected.address];
 
     if (currentAddress.address === this.state.address) {
-      alert(
-        "TODO: Proper message for not allowing poeple to send funds to the same address."
-      );
+      dispatchCustomEvent({
+        name: "create-alert",
+        detail: {
+          alert: {
+            message:
+              "You cannot send funds from an address to itself. Please enter a different address",
+          },
+        },
+      });
+
+      this.setState({ loading: false });
       return;
     }
 
-    this.props.onSubmit({
+    await this.props.onSubmit({
       type: "SEND_WALLET_ADDRESS_FILECOIN",
       source: currentAddress.address,
       target: this.state.address,
       amount: this.state.amount,
     });
+
+    this.setState({ loading: false });
   };
 
   _handleCancel = () => {
@@ -65,27 +77,19 @@ export default class SidebarWalletSendFunds extends React.Component {
   };
 
   render() {
-    let addresses = {};
-
-    this.props.viewer.addresses.forEach((a) => {
-      addresses[a.value] = a;
-    });
-
-    const currentAddress = addresses[this.props.selected.address];
-
-    // TODO(jim):
-    // Capture this state.
-    if (!currentAddress) {
-      return null;
-    }
-
     return (
       <React.Fragment>
-        <System.P style={{ fontFamily: Constants.font.semiBold }}>
+        <System.P
+          style={{
+            fontFamily: Constants.font.semiBold,
+            fontSize: Constants.typescale.lvl3,
+          }}
+        >
           Send Filecoin
         </System.P>
 
-        <System.SelectMenuFull
+        <System.SelectMenu
+          full
           containerStyle={{ marginTop: 24 }}
           name="address"
           label="From"
@@ -93,9 +97,7 @@ export default class SidebarWalletSendFunds extends React.Component {
           category="address"
           onChange={this.props.onSelectedChange}
           options={this.props.viewer.addresses}
-        >
-          {currentAddress.name}
-        </System.SelectMenuFull>
+        />
 
         <System.Input
           containerStyle={{ marginTop: 24 }}
@@ -126,12 +128,22 @@ export default class SidebarWalletSendFunds extends React.Component {
           <div css={STYLES_SUBTEXT}>Total Filecoin</div>
         </div>
 
-        <System.ButtonPrimaryFull
+        <System.ButtonPrimary
+          full
           style={{ marginTop: 48 }}
           onClick={this._handleSubmit}
+          loading={this.state.loading}
         >
           Send
-        </System.ButtonPrimaryFull>
+        </System.ButtonPrimary>
+
+        <System.ButtonSecondary
+          full
+          style={{ marginTop: 16 }}
+          onClick={this._handleCancel}
+        >
+          Cancel
+        </System.ButtonSecondary>
       </React.Fragment>
     );
   }

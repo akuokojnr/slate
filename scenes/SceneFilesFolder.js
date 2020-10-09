@@ -1,70 +1,73 @@
 import * as React from "react";
-import * as Strings from "~/common/strings";
-import * as Constants from "~/common/constants";
+import * as Actions from "~/common/actions";
 import * as System from "~/components/system";
+import * as SVG from "~/common/svg";
+import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
+import { TabGroup } from "~/components/core/TabGroup";
+import { ButtonPrimary } from "~/components/system/components/Buttons";
+import { dispatchCustomEvent } from "~/common/custom-events";
+import { WarningMessage } from "~/components/core/WarningMessage";
 
-import Section from "~/components/core/Section";
 import ScenePage from "~/components/core/ScenePage";
+import DataView from "~/components/core/DataView";
+import DataMeter from "~/components/core/DataMeter";
+import ScenePageHeader from "~/components/core/ScenePageHeader";
+import EmptyState from "~/components/core/EmptyState";
+
+const STYLES_ICONS = css`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+`;
+
+const POLLING_INTERVAL = 10000;
 
 export default class SceneFilesFolder extends React.Component {
-  state = {};
-
-  _handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
-
   render() {
-    let rows = [];
-    if (this.props.data.children) {
-      rows = [...this.props.data.children];
-    }
-
-    const data = {
-      columns: [
-        { key: "icon", hideLabel: true, width: "32px", type: "ICON" },
-        { key: "file", name: "File", width: "100%", type: "FILE_LINK" },
-        { key: "size", name: "Size", width: "140px", type: "FILE_SIZE" },
-        {
-          key: "date",
-          name: "Date uploaded",
-          width: "160px",
-          tooltip: "This date represents when the file was first uploaded to the network.",
-          type: "FILE_DATE",
-        },
-        {
-          key: "storage_status",
-          name: "Status",
-          type: "DEAL_STATUS",
-        },
-      ],
-      rows,
-    };
-
     return (
       <ScenePage>
-        <Section
-          onAction={this.props.onAction}
-          onNavigateTo={this.props.onNavigateTo}
-          title={this.props.data.name}
-          buttons={[
-            {
-              name: "Store file on network",
-              type: "SIDEBAR",
-              value: "SIDEBAR_FILE_STORAGE_DEAL",
-            },
-          ]}>
-          <System.Table
-            key={this.props.data.folderId}
-            data={data}
+        <ScenePageHeader
+          title="Data"
+          actions={
+            <ButtonPrimary
+              onClick={() => {
+                this.props.onAction({
+                  type: "SIDEBAR",
+                  value: "SIDEBAR_ADD_FILE_TO_BUCKET",
+                });
+              }}
+            >
+              Upload data
+            </ButtonPrimary>
+          }
+        />
+
+        <TabGroup disabled tabs={["Usage"]} />
+        <DataMeter stats={this.props.viewer.stats} />
+        {this.props.viewer.library[0].children &&
+        this.props.viewer.library[0].children.length ? (
+          <DataView
             onAction={this.props.onAction}
-            onNavigateTo={this.props.onNavigateTo}
-            selectedRowId={this.state.table_local_file}
-            onChange={this._handleChange}
-            name="table_local_file"
+            viewer={this.props.viewer}
+            items={this.props.viewer.library[0].children}
+            onRehydrate={this.props.onRehydrate}
           />
-        </Section>
+        ) : (
+          <EmptyState>
+            <div css={STYLES_ICONS}>
+              <SVG.Sound height="24px" style={{ margin: "0 16px" }} />
+              <SVG.Document height="24px" style={{ margin: "0 16px" }} />
+              <SVG.Image height="24px" style={{ margin: "0 16px" }} />
+              <SVG.Book height="24px" style={{ margin: "0 16px" }} />
+              <SVG.Video height="24px" style={{ margin: "0 16px" }} />
+            </div>
+            <div style={{ marginTop: 24 }}>
+              Drag and drop files into Slate to upload
+            </div>
+          </EmptyState>
+        )}
       </ScenePage>
     );
   }

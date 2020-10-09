@@ -1,32 +1,12 @@
 import * as React from "react";
 import * as Constants from "~/common/constants";
-import * as System from "~/components/system";
 import * as SVG from "~/common/svg";
 
-import { css } from "@emotion/react";
+import ApplicationUserControls from "~/components/core/ApplicationUserControls";
 
-import Avatar from "~/components/core/Avatar";
-
-const STYLES_CIRCLE = css`
-  height: 32px;
-  width: 32px;
-  border-radius: 32px;
-  background-color: ${Constants.system.black};
-  color: ${Constants.system.white};
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
-  transition: 200ms ease all;
-  cursor: pointer;
-  user-select: none;
-
-  :hover {
-    color: ${Constants.system.white};
-    background-color: ${Constants.system.brand};
-  }
-`;
+import { css, keyframes } from "@emotion/react";
+import { SearchModal } from "~/components/core/SearchModal";
+import { dispatchCustomEvent } from "~/common/custom-events";
 
 const STYLES_ICON_ELEMENT = css`
   height: 40px;
@@ -37,6 +17,7 @@ const STYLES_ICON_ELEMENT = css`
   color: #565151;
   user-select: none;
   cursor: pointer;
+  pointer-events: auto;
 
   :hover {
     color: ${Constants.system.brand};
@@ -48,37 +29,33 @@ const STYLES_ICON_ELEMENT = css`
   }
 `;
 
-const STYLES_ICON_ELEMENT_CUSTOM = css`
-  height: 40px;
-  width: 40px;
-  border-radius: 40px;
-  background: ${Constants.system.brand};
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: ${Constants.system.white};
-  user-select: none;
-  cursor: pointer;
-
-  svg {
-    transform: rotate(0deg);
-    transition: 200ms ease transform;
-  }
-`;
-
 const STYLES_APPLICATION_HEADER = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  height: 100%;
-  background: ${Constants.system.foreground};
-  box-shadow: inset 0 -1px 0 0 ${Constants.system.border};
+  width: calc(100% - ${Constants.sizes.navigation}px);
+  height: 56px;
+  padding: 0 48px 0 36px;
+  pointer-events: none;
+  background-color: ${Constants.system.white};
+
+  @supports (
+    (-webkit-backdrop-filter: blur(25px)) or (backdrop-filter: blur(25px))
+  ) {
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    background-color: rgba(255, 255, 255, 0.75);
+  }
+
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    padding: 0px 12px;
+    width: 100%;
+  }
 `;
 
 const STYLES_LEFT = css`
   flex-shrink: 0;
-  width: 288px;
+  ${"" /* width: 352px; */}
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -90,36 +67,62 @@ const STYLES_MIDDLE = css`
   padding: 0 24px 0 48px;
 `;
 
-const STYLES_RIGHT = css`
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 16px;
-`;
-
-const STYLES_INPUT = css`
-  width: 100%;
-  max-width: 1024px;
-  font-size: 16px;
-  height: 40px;
-  padding: 0 16px 0 16px;
-  background-color: ${Constants.system.white};
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px #e0e0e0, 0 1px 4px rgba(0, 0, 0, 0.04);
-  border: 0;
-  outline: 0;
-  box-sizing: border-box;
-  transition: 200ms ease all;
-
-  :focus {
-    box-shadow: 0 1px 4px rgba(0, 71, 255, 0.3),
-      inset 0 0 0 1px ${Constants.system.brand};
-    outline: 0;
+const STYLES_MOBILE_HIDDEN = css`
+  @media (max-width: ${Constants.sizes.mobile}px) {
+    display: none;
   }
 `;
 
+const STYLES_MOBILE_ONLY = css`
+  @media (min-width: ${Constants.sizes.mobile}px) {
+    display: none;
+  }
+`;
+
+const STYLES_RIGHT = css`
+  min-width: 10%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+`;
+
+const rotate = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+`;
+
+const STYLES_ROTATION = css`
+  animation: ${rotate} 1s linear infinite;
+`;
+
+const STYLES_STATIC = css`
+  transition: 200ms ease all;
+`;
+
 export default class ApplicationHeader extends React.Component {
+  state = {
+    isRefreshing: false,
+  };
+
+  _handleCreateSearch = (e) => {
+    dispatchCustomEvent({
+      name: "create-modal",
+      detail: { modal: <SearchModal onAction={this.props.onAction} /> },
+    });
+  };
+
+  _handleRehydrate = (e) => {
+    this.setState({ isRefreshing: true }, async () => {
+      await this.props.onRehydrate();
+      this.setState({ isRefreshing: false });
+    });
+  };
+
   render() {
     const isBackDisabled =
       this.props.currentIndex === 0 || this.props.history.length < 2;
@@ -132,56 +135,114 @@ export default class ApplicationHeader extends React.Component {
       <header css={STYLES_APPLICATION_HEADER}>
         <div css={STYLES_LEFT}>
           <span
-            css={STYLES_ICON_ELEMENT_CUSTOM}
-            style={{ marginRight: 16, marginLeft: 12 }}
+            css={STYLES_MOBILE_ONLY}
+            style={{ pointerEvents: "auto", marginLeft: 8, marginRight: 16 }}
           >
-            <SVG.Logo height="32px" />
-          </span>
-          <span
-            css={STYLES_ICON_ELEMENT}
-            style={
-              isBackDisabled
-                ? { cursor: "not-allowed", color: Constants.system.border }
-                : null
-            }
-            onClick={isBackDisabled ? () => {} : this.props.onBack}
-          >
-            <SVG.NavigationArrow
-              height="16px"
-              style={{ transform: `rotate(180deg)` }}
+            <ApplicationUserControls
+              viewer={this.props.viewer}
+              onAction={this.props.onAction}
+              onSignOut={this.props.onSignOut}
             />
           </span>
-          <span
-            css={STYLES_ICON_ELEMENT}
-            style={
-              isForwardDisabled
-                ? { cursor: "not-allowed", color: Constants.system.border }
-                : null
-            }
-            onClick={isForwardDisabled ? () => {} : this.props.onForward}
-          >
-            <SVG.NavigationArrow height="16px" />
+
+          <span css={STYLES_MOBILE_HIDDEN}>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={
+                isBackDisabled
+                  ? { cursor: "not-allowed", color: Constants.system.border }
+                  : null
+              }
+              onClick={isBackDisabled ? () => {} : this.props.onBack}
+            >
+              <SVG.NavigationArrow
+                height="24px"
+                style={{ transform: `rotate(180deg)` }}
+              />
+            </span>
+          </span>
+          <span css={STYLES_MOBILE_HIDDEN}>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={
+                isForwardDisabled
+                  ? { cursor: "not-allowed", color: Constants.system.border }
+                  : null
+              }
+              onClick={isForwardDisabled ? () => {} : this.props.onForward}
+            >
+              <SVG.NavigationArrow height="24px" />
+            </span>
+          </span>
+          <span css={STYLES_MOBILE_HIDDEN}>
+            <span
+              css={this.state.isRefreshing ? STYLES_ROTATION : STYLES_STATIC}
+              style={{ marginLeft: 24 }}
+            >
+              <span css={STYLES_ICON_ELEMENT} onClick={this._handleRehydrate}>
+                <SVG.Refresh height="20px" />
+              </span>
+            </span>
+          </span>
+          <span css={STYLES_MOBILE_HIDDEN}>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={{ marginLeft: 24 }}
+              onClick={this._handleCreateSearch}
+            >
+              <SVG.Search height="24px" />
+            </span>
           </span>
         </div>
-        <div css={STYLES_MIDDLE} />
+        {/* <div css={STYLES_MIDDLE} /> */}
         <div css={STYLES_RIGHT}>
-          <Avatar
-            style={{ marginLeft: 12 }}
-            onClick={() => {}}
-            size={32}
-            url={this.props.viewer.photoURL}
-            popover={
-              <System.PopoverNavigation
-                style={{ right: 0, top: "48px", cursor: "pointer" }}
-                onNavigateTo={this.props.onNavigateTo}
-                onAction={this.props.onAction}
-                navigation={[
-                  { text: "Edit account", value: 13 },
-                  { text: "Settings", value: 14 },
-                ]}
+          <span css={STYLES_MOBILE_HIDDEN}>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              onClick={() =>
+                this.props.onAction({
+                  type: "SIDEBAR",
+                  value: "SIDEBAR_HELP",
+                })
+              }
+            >
+              <SVG.Help height="24px" />
+            </span>
+          </span>
+          <span css={STYLES_MOBILE_ONLY}>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={
+                isBackDisabled
+                  ? { cursor: "not-allowed", color: Constants.system.border }
+                  : null
+              }
+              onClick={isBackDisabled ? () => {} : this.props.onBack}
+            >
+              <SVG.NavigationArrow
+                height="24px"
+                style={{ transform: `rotate(180deg)` }}
               />
-            }
-          />
+            </span>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={
+                isForwardDisabled
+                  ? { cursor: "not-allowed", color: Constants.system.border }
+                  : null
+              }
+              onClick={isForwardDisabled ? () => {} : this.props.onForward}
+            >
+              <SVG.NavigationArrow height="24px" />
+            </span>
+            <span
+              css={STYLES_ICON_ELEMENT}
+              style={{ marginLeft: 12 }}
+              onClick={this._handleCreateSearch}
+            >
+              <SVG.Search height="24px" />
+            </span>
+          </span>
         </div>
       </header>
     );

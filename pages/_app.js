@@ -6,7 +6,8 @@ import { cache } from "@emotion/css";
 import App from "next/app";
 import {
   injectGlobalStyles,
-  injectTooltipStyles,
+  injectGlobalGridStyles,
+  injectCodeBlockStyles,
 } from "~/common/styles/global";
 
 // NOTE(wwwjim):
@@ -15,7 +16,8 @@ function MyApp({ Component, pageProps }) {
   return (
     <CacheProvider value={cache}>
       <Global styles={injectGlobalStyles()} />
-      <Global styles={injectTooltipStyles()} />
+      <Global styles={injectCodeBlockStyles()} />
+      <Global styles={injectGlobalGridStyles()} />
       <Component {...pageProps} />
     </CacheProvider>
   );

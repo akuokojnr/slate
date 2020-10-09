@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as Strings from "~/common/strings";
 import * as Constants from "~/common/constants";
-import * as SVG from "~/components/system/svg";
+import * as SVG from "~/common/svg";
 import * as System from "~/components/system";
 
 import { css } from "@emotion/react";
@@ -43,20 +43,6 @@ const STYLES_IMAGE_PREVIEW = css`
   margin-top: 48px;
 `;
 
-const SELECT_MENU_OPTIONS = [
-  { value: "1", name: "Anywhere" },
-  { value: "2", name: "China" },
-  { value: "3", name: "Russia" },
-  { value: "4", name: "USA" },
-];
-
-const SELECT_MENU_MAP = {
-  "1": "Anywhere",
-  "2": "China",
-  "3": "Russia",
-  "4": "USA",
-};
-
 export default class SidebarFileStorageDeal extends React.Component {
   state = {
     settings_cold_default_duration: this.props.viewer
@@ -65,19 +51,17 @@ export default class SidebarFileStorageDeal extends React.Component {
       .settings_cold_default_replication_factor,
   };
 
-  _handleUpload = async (e) => {
-    e.persist();
-    let file = e.target.files[0];
-
-    if (!file) {
-      alert("Something went wrong");
-      return;
+  async componentDidMount() {
+    if (!this.props.viewer.settings_deals_auto_approve) {
+      return null;
     }
 
-    await this.props.onSetFile({ file });
-  };
+    console.log("SETTINGS: AUTO DEAL");
 
-  _handleMakeDeal = async (src) => {
+    await this._handleSubmit();
+  }
+
+  _handleMakeDeal = async ({ ipfs }) => {
     const options = {
       method: "POST",
       credentials: "include",
@@ -85,20 +69,22 @@ export default class SidebarFileStorageDeal extends React.Component {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ src }),
+      body: JSON.stringify({ ipfs }),
     };
 
-    const response = await fetch("/_/deals/storage", options);
+    const response = await fetch("/api/data/storage-deal", options);
     const json = await response.json();
+    console.log(json);
     return json;
   };
 
   _handleSubmit = async (e) => {
-    e.persist();
+    if (e) {
+      e.persist();
+    }
 
-    const path = `/public/static/files/${this.props.file.name}`;
-    await this._handleMakeDeal(path);
-
+    this.props.onSidebarLoading(true);
+    await this._handleMakeDeal({ ipfs: this.props.data.ipfs });
     await this.props.onSubmit({});
   };
 
@@ -111,58 +97,32 @@ export default class SidebarFileStorageDeal extends React.Component {
   };
 
   render() {
-    let addresses = {};
-    let lastAddress;
-
-    this.props.viewer.addresses.forEach((a) => {
-      addresses[a.address] = a;
-      lastAddress = a.address;
-    });
-
-    const currentAddress = this.props.selected.address
-      ? addresses[this.props.selected.address]
-      : addresses[lastAddress];
+    const file = this.props.data;
 
     return (
       <React.Fragment>
-        <System.P style={{ fontFamily: Constants.font.semiBold }}>
-          Upload a file to the network
-        </System.P>
-        <input
-          css={STYLES_FILE_HIDDEN}
-          type="file"
-          id="file"
-          onChange={this._handleUpload}
-        />
-
-        {this.props.file ? (
-          <div>
-            <img
-              src={`/static/files/${this.props.file.name}`}
-              css={STYLES_IMAGE_PREVIEW}
-            />
-
-            <div css={STYLES_ITEM}>
-              <div css={STYLES_FOCUS}>{this.props.file.name}</div>
-              <div css={STYLES_SUBTEXT}>Name</div>
-            </div>
-
-            <div css={STYLES_ITEM}>
-              <div css={STYLES_FOCUS}>{this.props.file.size}</div>
-              <div css={STYLES_SUBTEXT}>File size</div>
-            </div>
-          </div>
-        ) : null}
-
-        <System.ButtonSecondaryFull
-          type="label"
-          htmlFor="file"
-          style={{ marginTop: 24 }}
+        <System.P
+          style={{
+            fontFamily: Constants.font.semiBold,
+            fontSize: Constants.typescale.lvl3,
+          }}
         >
-          Add file
-        </System.ButtonSecondaryFull>
+          Make Filecoin storage deal
+        </System.P>
 
-        {this.props.file ? (
+        <div>
+          <div css={STYLES_ITEM}>
+            <div css={STYLES_FOCUS}>{file.name}</div>
+            <div css={STYLES_SUBTEXT}>Name</div>
+          </div>
+
+          <div css={STYLES_ITEM}>
+            <div css={STYLES_FOCUS}>{Strings.bytesToSize(file.size)}</div>
+            <div css={STYLES_SUBTEXT}>File size</div>
+          </div>
+        </div>
+
+        {!this.props.sidebarLoading ? (
           <System.Input
             containerStyle={{ marginTop: 48 }}
             label="Deal duration"
@@ -174,7 +134,7 @@ export default class SidebarFileStorageDeal extends React.Component {
           />
         ) : null}
 
-        {this.props.file ? (
+        {!this.props.sidebarLoading ? (
           <System.Input
             containerStyle={{ marginTop: 24 }}
             label="Replication factor"
@@ -184,8 +144,9 @@ export default class SidebarFileStorageDeal extends React.Component {
           />
         ) : null}
 
-        {this.props.file ? (
-          <System.SelectMenuFull
+        {!this.props.sidebarLoading ? (
+          <System.SelectMenu
+            full
             containerStyle={{ marginTop: 24 }}
             name="address"
             label="Payment address"
@@ -193,18 +154,26 @@ export default class SidebarFileStorageDeal extends React.Component {
             category="address"
             onChange={this.props.onSelectedChange}
             options={this.props.viewer.addresses}
-          >
-            {currentAddress.name}
-          </System.SelectMenuFull>
+          />
         ) : null}
 
-        {this.props.file ? (
-          <System.ButtonPrimaryFull
-            style={{ marginTop: 48 }}
-            onClick={this._handleSubmit}
+        <System.ButtonPrimary
+          full
+          style={{ marginTop: 48 }}
+          onClick={this._handleSubmit}
+          loading={this.props.sidebarLoading}
+        >
+          Make storage deal
+        </System.ButtonPrimary>
+
+        {!this.props.sidebarLoading ? (
+          <System.ButtonSecondary
+            full
+            style={{ marginTop: 16 }}
+            onClick={this._handleCancel}
           >
-            Make storage deal
-          </System.ButtonPrimaryFull>
+            Cancel deal
+          </System.ButtonSecondary>
         ) : null}
       </React.Fragment>
     );
