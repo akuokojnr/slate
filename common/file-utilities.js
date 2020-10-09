@@ -1,7 +1,6 @@
 import * as Actions from "~/common/actions";
 import * as Store from "~/common/store";
 
-import JSZip from "jszip";
 import mime from "mime-types";
 
 import { dispatchCustomEvent } from "~/common/custom-events";
